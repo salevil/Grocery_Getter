@@ -16,6 +16,7 @@ import CatalogPage from './pages/CatalogPage.jsx'
 import StoreManagerPage from './pages/StoreManagerPage.jsx'
 import ShoppingListPage from './pages/ShoppingListPage.jsx'
 import ShoppingModePage from './pages/ShoppingModePage.jsx'
+import HouseholdPage from './pages/HouseholdPage.jsx'
 import BottomNav from './components/BottomNav.jsx'
 
 // Auth guard: redirect to /login if no token in localStorage
@@ -45,6 +46,7 @@ createRoot(document.getElementById('root')).render(
         {/* Protected routes */}
         <Route element={<RequireAuth />}>
           <Route path="/household/setup" element={<HouseholdSetupPage />} />
+          <Route path="/household" element={<HouseholdPage />} />
           <Route path="/catalog" element={<CatalogPage />} />
           <Route path="/stores" element={<StoreManagerPage />} />
           <Route path="/lists" element={<ShoppingListPage />} />
