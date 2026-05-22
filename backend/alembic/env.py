@@ -60,8 +60,23 @@ def do_run_migrations(connection) -> None:
 
 async def run_async_migrations() -> None:
     """Run migrations using an async engine (required for asyncpg)."""
+    import ssl
     url = get_url()
-    connectable = create_async_engine(url, poolclass=pool.NullPool)
+
+    connect_args = {}
+    if "supabase.co" in url or "pooler.supabase.com" in url:
+        ssl_context = ssl.create_default_context()
+        ssl_context.check_hostname = False
+        ssl_context.verify_mode = ssl.CERT_NONE
+        connect_args["ssl"] = ssl_context
+    if "pooler.supabase.com" in url:
+        connect_args["statement_cache_size"] = 0
+
+    connectable = create_async_engine(
+        url,
+        poolclass=pool.NullPool,
+        connect_args=connect_args,
+    )
 
     async with connectable.connect() as connection:
         await connection.run_sync(do_run_migrations)

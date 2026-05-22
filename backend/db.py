@@ -24,11 +24,15 @@ DATABASE_URL: str = os.getenv(
 
 # Build connect_args — Supabase (and most cloud PostgreSQL) requires SSL
 connect_args = {}
-if "supabase.co" in DATABASE_URL or os.getenv("DB_SSL", "").lower() == "true":
+if "supabase.co" in DATABASE_URL or "pooler.supabase.com" in DATABASE_URL or os.getenv("DB_SSL", "").lower() == "true":
     ssl_context = ssl.create_default_context()
     ssl_context.check_hostname = False
     ssl_context.verify_mode = ssl.CERT_NONE
     connect_args["ssl"] = ssl_context
+
+# Supabase transaction pooler (pgbouncer) requires statement_cache_size=0
+if "pooler.supabase.com" in DATABASE_URL:
+    connect_args["statement_cache_size"] = 0
 
 engine = create_async_engine(
     DATABASE_URL,
