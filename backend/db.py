@@ -26,6 +26,8 @@ DATABASE_URL: str = os.getenv(
 connect_args = {}
 if "supabase.co" in DATABASE_URL or os.getenv("DB_SSL", "").lower() == "true":
     ssl_context = ssl.create_default_context()
+    ssl_context.check_hostname = False
+    ssl_context.verify_mode = ssl.CERT_NONE
     connect_args["ssl"] = ssl_context
 
 engine = create_async_engine(
