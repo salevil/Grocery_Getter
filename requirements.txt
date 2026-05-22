@@ -15,7 +15,7 @@ alembic==1.18.4
 # Auth: JWT + password hashing
 python-jose[cryptography]==3.5.0
 passlib[bcrypt]==1.7.4
-bcrypt==4.0.1  # passlib 1.7.4 is incompatible with bcrypt>=4.1 (dropped __about__)
+bcrypt==4.0.1
 
 # Async HTTP client (Open Food Facts API)
 httpx==0.28.1
@@ -23,8 +23,8 @@ httpx==0.28.1
 # File upload support for FastAPI
 python-multipart==0.0.29
 
-# S3-compatible photo storage (Supabase Storage / Cloudflare R2)
-boto3==1.43.11
+# Supabase client (Storage + DB)
+supabase==2.15.1
 
 # Testing
 hypothesis==6.152.9
