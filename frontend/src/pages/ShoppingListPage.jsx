@@ -239,20 +239,16 @@ export default function ShoppingListPage() {
         {/* ---------------------------------------------------------------- */}
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-bold text-gray-800">Shopping List</h1>
-          <nav className="flex gap-3 text-sm font-medium">
-            <Link
-              to="/catalog"
-              className="text-blue-600 hover:text-blue-800 transition-colors"
-            >
-              Catalog
-            </Link>
-            <Link
-              to="/stores"
-              className="text-blue-600 hover:text-blue-800 transition-colors"
-            >
-              Stores
-            </Link>
-          </nav>
+          <button
+            type="button"
+            onClick={() => openAddModal({ store_id: null, store_name: null })}
+            className="flex items-center gap-1 px-3 py-2 rounded-lg bg-green-600 hover:bg-green-700 text-white text-sm font-medium transition-colors"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden="true">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+            </svg>
+            Add item
+          </button>
         </div>
 
         {/* Load error */}
@@ -264,15 +260,19 @@ export default function ShoppingListPage() {
 
         {/* Empty state */}
         {sections.length === 0 && !loadError && (
-          <div className="bg-white rounded-2xl shadow-md p-8 text-center text-gray-500">
+          <div className="bg-white rounded-2xl shadow-md p-8 text-center text-gray-500 space-y-4">
             <p className="text-lg font-medium">Your list is empty</p>
-            <p className="text-sm mt-1">
-              Add products from the{' '}
-              <Link to="/catalog" className="text-blue-600 hover:underline">
-                Catalog
-              </Link>{' '}
-              to get started.
-            </p>
+            <p className="text-sm">Tap the button above or below to add products from your catalog.</p>
+            <button
+              type="button"
+              onClick={() => openAddModal({ store_id: null, store_name: null })}
+              className="mx-auto flex items-center gap-2 px-4 py-2 rounded-lg bg-green-600 hover:bg-green-700 text-white text-sm font-semibold transition-colors"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+              </svg>
+              Add item
+            </button>
           </div>
         )}
 
