@@ -6,6 +6,7 @@ to be running or DATABASE_URL to point to a live server.
 """
 
 import os
+import ssl
 from typing import AsyncGenerator
 
 from sqlalchemy.ext.asyncio import (
@@ -21,14 +22,17 @@ DATABASE_URL: str = os.getenv(
     "postgresql+asyncpg://localhost/grocery_getter",
 )
 
-# `create_async_engine` is lazy: it does not open any connections until the first
-# query is executed, so this module is safe to import without a running database.
+# Build connect_args — Supabase (and most cloud PostgreSQL) requires SSL
+connect_args = {}
+if "supabase.co" in DATABASE_URL or os.getenv("DB_SSL", "").lower() == "true":
+    ssl_context = ssl.create_default_context()
+    connect_args["ssl"] = ssl_context
+
 engine = create_async_engine(
     DATABASE_URL,
-    # Echo SQL statements in development; set to False (or read from env) in prod.
     echo=False,
-    # Use a reasonable pool size for a single-process FastAPI app.
     pool_pre_ping=True,
+    connect_args=connect_args,
 )
 
 # Session factory — `expire_on_commit=False` prevents lazy-load errors after commit
