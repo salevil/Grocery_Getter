@@ -328,6 +328,32 @@ async def update_product(
     return ProductResponse.model_validate(product)
 
 
+@router.post("/products/{product_id}/photo", response_model=ProductResponse)
+async def upload_product_photo(
+    product_id: int,
+    photo: UploadFile = File(...),
+    current_user: User = Depends(get_current_household_user),
+    db: AsyncSession = Depends(get_db),
+) -> ProductResponse:
+    """Upload or replace the photo for an existing product."""
+    result = await db.execute(select(Product).where(Product.id == product_id))
+    product: Product | None = result.scalar_one_or_none()
+
+    if product is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Product not found")
+    if product.household_id != current_user.household_id:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Access denied")
+
+    # Delete old photo if exists
+    if product.photo_url:
+        await photo_service.delete_photo(product.photo_url)
+
+    product.photo_url = await photo_service.upload_photo(photo)
+    await db.commit()
+    await db.refresh(product)
+    return ProductResponse.model_validate(product)
+
+
 @router.delete("/products/{product_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_product(
     product_id: int,

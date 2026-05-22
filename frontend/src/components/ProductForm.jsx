@@ -66,15 +66,26 @@ export default function ProductForm({ initialValues = {}, stores = [], onSuccess
       let data
 
       if (isEdit) {
-        // Req 4.5: PATCH as JSON for edits
+        // For edits: send fields as JSON, then upload photo separately if provided
         const body = {}
         if (name) body.name = name
         if (brand !== '') body.brand = brand || null
         if (quantity !== '') body.quantity = quantity || null
         body.store_id = storeId !== '' ? Number(storeId) : null
-
         const res = await apiClient.patch(`/api/catalog/products/${initialValues.id}`, body)
         data = res.data
+
+        // If a new photo was selected, upload it separately
+        if (photoFile) {
+          const photoForm = new FormData()
+          photoForm.append('photo', photoFile)
+          const photoRes = await apiClient.post(
+            `/api/catalog/products/${initialValues.id}/photo`,
+            photoForm,
+            { headers: { 'Content-Type': 'multipart/form-data' } }
+          )
+          data = photoRes.data
+        }
       } else {
         // Req 4.1, 4.2, 4.3: POST as multipart/form-data for creates
         const formData = new FormData()
@@ -174,26 +185,32 @@ export default function ProductForm({ initialValues = {}, stores = [], onSuccess
         </select>
       </div>
 
-      {/* Photo — create mode only */}
-      {!isEdit && (
-        <div>
-          <label htmlFor="pf-photo" className="block text-sm font-medium text-gray-700 mb-1">
-            Photo
-          </label>
-          <input
-            id="pf-photo"
-            type="file"
-            accept="image/jpeg,image/png"
-            onChange={handlePhotoChange}
-            className="w-full text-sm text-gray-600 file:mr-3 file:py-1 file:px-3 file:rounded file:border-0 file:text-sm file:bg-green-50 file:text-green-700 hover:file:bg-green-100"
+      {/* Photo — shown in both create and edit mode */}
+      <div>
+        <label htmlFor="pf-photo" className="block text-sm font-medium text-gray-700 mb-1">
+          {isEdit ? 'Replace photo' : 'Photo'}
+        </label>
+        {isEdit && initialValues.photo_url && (
+          <img
+            src={initialValues.photo_url}
+            alt="Current product photo"
+            className="w-16 h-16 rounded-lg object-cover mb-2 bg-gray-100"
           />
-          {photoError && (
-            <p role="alert" className="mt-1 text-sm text-red-600">
-              {photoError}
-            </p>
-          )}
-        </div>
-      )}
+        )}
+        <input
+          id="pf-photo"
+          type="file"
+          accept="image/jpeg,image/png"
+          capture="environment"
+          onChange={handlePhotoChange}
+          className="w-full text-sm text-gray-600 file:mr-3 file:py-1 file:px-3 file:rounded file:border-0 file:text-sm file:bg-green-50 file:text-green-700 hover:file:bg-green-100"
+        />
+        {photoError && (
+          <p role="alert" className="mt-1 text-sm text-red-600">
+            {photoError}
+          </p>
+        )}
+      </div>
 
       {/* Server error */}
       {serverError && (
