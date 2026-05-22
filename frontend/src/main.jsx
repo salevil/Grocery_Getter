@@ -16,6 +16,7 @@ import CatalogPage from './pages/CatalogPage.jsx'
 import StoreManagerPage from './pages/StoreManagerPage.jsx'
 import ShoppingListPage from './pages/ShoppingListPage.jsx'
 import ShoppingModePage from './pages/ShoppingModePage.jsx'
+import BottomNav from './components/BottomNav.jsx'
 
 // Auth guard: redirect to /login if no token in localStorage
 function RequireAuth() {
@@ -23,7 +24,14 @@ function RequireAuth() {
   if (!token) {
     return <Navigate to="/login" replace />
   }
-  return <Outlet />
+  return (
+    <>
+      <div className="pb-16">
+        <Outlet />
+      </div>
+      <BottomNav />
+    </>
+  )
 }
 
 createRoot(document.getElementById('root')).render(
