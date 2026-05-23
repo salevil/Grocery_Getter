@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import apiClient from '../services/apiClient'
 
 /**
@@ -14,6 +15,7 @@ import apiClient from '../services/apiClient'
  * Requirements: 5.1, 5.2, 5.3, 5.4, 5.5
  */
 export default function StoreManagerPage() {
+  const { t } = useTranslation()
   const [stores, setStores] = useState([])
   const [loading, setLoading] = useState(true)
   const [loadError, setLoadError] = useState('')

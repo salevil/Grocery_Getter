@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import apiClient from '../services/apiClient'
 
 /**
@@ -22,6 +23,7 @@ import apiClient from '../services/apiClient'
  */
 export default function ShoppingListPage() {
   const navigate = useNavigate()
+  const { t } = useTranslation()
 
   // Shopping list data: { sections: StoreListSection[] }
   const [sections, setSections] = useState([])
@@ -225,7 +227,7 @@ export default function ShoppingListPage() {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <p className="text-gray-500 animate-pulse">Loading shopping list…</p>
+        <p className="text-gray-500 animate-pulse">{t('list.loading')}</p>
       </div>
     )
   }
@@ -238,7 +240,7 @@ export default function ShoppingListPage() {
         {/* Header + navigation links                                         */}
         {/* ---------------------------------------------------------------- */}
         <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold text-gray-800">Shopping List</h1>
+          <h1 className="text-2xl font-bold text-gray-800">{t('list.title')}</h1>
           <button
             type="button"
             onClick={() => openAddModal({ store_id: null, store_name: null })}
@@ -261,8 +263,8 @@ export default function ShoppingListPage() {
         {/* Empty state */}
         {sections.length === 0 && !loadError && (
           <div className="bg-white rounded-2xl shadow-md p-8 text-center text-gray-500 space-y-4">
-            <p className="text-lg font-medium">Your list is empty</p>
-            <p className="text-sm">Tap the button above or below to add products from your catalog.</p>
+            <p className="text-lg font-medium">{t('list.empty')}</p>
+            <p className="text-sm">{t('list.emptyDesc')}</p>
             <button
               type="button"
               onClick={() => openAddModal({ store_id: null, store_name: null })}
@@ -311,10 +313,10 @@ export default function ShoppingListPage() {
                     <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
                   </svg>
                   <span className="font-semibold text-gray-800">
-                    {section.store_name ?? 'Unassigned'}
+                    {section.store_name ?? t('list.unassigned')}
                   </span>
                   <span className="ml-1 text-xs text-gray-400 font-normal">
-                    ({section.items.length} {section.items.length === 1 ? 'item' : 'items'})
+                    ({section.items.length} {section.items.length === 1 ? t('list.item') : t('list.items')})
                   </span>
                 </button>
 
@@ -325,12 +327,12 @@ export default function ShoppingListPage() {
                     type="button"
                     onClick={() => openAddModal(section)}
                     className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-green-600 hover:bg-green-700 text-white text-xs font-semibold transition-colors"
-                    aria-label={`Add item to ${section.store_name ?? 'Unassigned'}`}
+                    aria-label={`Add item to ${section.store_name ?? t('list.unassigned')}`}
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5} aria-hidden="true">
                       <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
                     </svg>
-                    Add item
+                    {t('list.addItem')}
                   </button>
 
                   {/* Go shopping button (only for named stores) */}
@@ -344,7 +346,7 @@ export default function ShoppingListPage() {
                       <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden="true">
                         <path strokeLinecap="round" strokeLinejoin="round" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
                       </svg>
-                      Go shopping
+                      {t('list.goShopping')}
                     </button>
                   )}
                 </div>
@@ -355,7 +357,7 @@ export default function ShoppingListPage() {
                 <ul id={`section-${key}`} className="divide-y divide-gray-50">
                   {section.items.length === 0 ? (
                     <li className="px-5 py-4 text-sm text-gray-400 text-center">
-                      No items yet — add one above.
+                      {t('list.noItemsYet')}
                     </li>
                   ) : (
                     section.items.map((item) => (
@@ -462,7 +464,7 @@ export default function ShoppingListPage() {
             {/* Modal header */}
             <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
               <h2 className="text-base font-semibold text-gray-800">
-                Add item to {addModal.storeName ?? 'Unassigned'}
+                {t('list.addTo')} {addModal.storeName ?? t('list.unassigned')}
               </h2>
               <button
                 type="button"
@@ -487,7 +489,7 @@ export default function ShoppingListPage() {
 
               {catalogLoading && (
                 <p className="text-sm text-gray-500 animate-pulse text-center py-4">
-                  Loading catalog…
+                  {t('list.loading')}
                 </p>
               )}
 
@@ -499,13 +501,13 @@ export default function ShoppingListPage() {
 
               {!catalogLoading && !catalogError && catalog.length === 0 && (
                 <p className="text-sm text-gray-500 text-center py-4">
-                  No products in catalog yet.{' '}
+                  {t('list.noProducts')}{' '}
                   <Link
                     to="/catalog"
                     className="text-blue-600 hover:underline"
                     onClick={closeAddModal}
                   >
-                    Add products first.
+                    {t('list.addProductsFirst')}
                   </Link>
                 </p>
               )}

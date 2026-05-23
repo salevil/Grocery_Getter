@@ -30,10 +30,6 @@ function RequireAuth() {
   }
   return (
     <>
-      {/* Language switcher — top right corner */}
-      <div className="fixed top-3 right-4 z-30">
-        <LanguageSwitcher />
-      </div>
       <div className="pb-16">
         <Outlet />
       </div>

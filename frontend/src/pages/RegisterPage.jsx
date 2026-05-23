@@ -1,11 +1,13 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import apiClient from '../services/apiClient'
 import useAuthStore from '../store/authStore'
 
 export default function RegisterPage() {
   const navigate = useNavigate()
   const login = useAuthStore((s) => s.login)
+  const { t } = useTranslation()
 
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -34,7 +36,7 @@ export default function RegisterPage() {
       } else if (Array.isArray(detail)) {
         setError(detail.map((d) => d.msg).join(' '))
       } else {
-        setError('Registration failed. Please try again.')
+        setError(t('auth.registrationFailed'))
       }
     } finally {
       setLoading(false)
@@ -46,13 +48,13 @@ export default function RegisterPage() {
       <div className="w-full max-w-md bg-white rounded-2xl shadow-md p-8">
         <div className="flex flex-col items-center mb-6">
           <img src="/logo.svg" alt="Grocery Getter" className="h-20 w-auto mb-2" />
-          <h1 className="text-2xl font-bold text-gray-800">Create an account</h1>
+          <h1 className="text-2xl font-bold text-gray-800">{t('auth.register')}</h1>
         </div>
 
         <form onSubmit={handleSubmit} noValidate className="space-y-4">
           <div>
             <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
-              Email
+              {t('auth.email')}
             </label>
             <input
               id="email"
@@ -68,7 +70,7 @@ export default function RegisterPage() {
 
           <div>
             <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
-              Password
+              {t('auth.password')}
             </label>
             <input
               id="password"
@@ -79,7 +81,7 @@ export default function RegisterPage() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
-              placeholder="At least 8 characters"
+              placeholder={t('auth.passwordMin')}
             />
           </div>
 
@@ -94,14 +96,14 @@ export default function RegisterPage() {
             disabled={loading}
             className="w-full bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white font-semibold py-2 rounded-lg transition-colors"
           >
-            {loading ? 'Creating account…' : 'Register'}
+            {loading ? t('auth.creating') : t('auth.register')}
           </button>
         </form>
 
         <p className="mt-4 text-center text-sm text-gray-500">
-          Already have an account?{' '}
+          {t('auth.alreadyHave')}{' '}
           <a href="/login" className="text-green-600 hover:underline font-medium">
-            Sign in
+            {t('auth.signIn')}
           </a>
         </p>
       </div>

@@ -1,5 +1,6 @@
 import { Link, useLocation } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
+import LanguageSwitcher from './LanguageSwitcher'
 
 export default function BottomNav() {
   const { pathname } = useLocation()
@@ -61,6 +62,10 @@ export default function BottomNav() {
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-20 safe-area-pb">
+      {/* Language switcher row */}
+      <div className="flex justify-center items-center gap-2 pt-1.5 pb-0.5 border-b border-gray-100">
+        <LanguageSwitcher />
+      </div>
       <div className="flex">
         {tabs.map((tab) => {
           const active = pathname === tab.to || pathname.startsWith(tab.to + '/')

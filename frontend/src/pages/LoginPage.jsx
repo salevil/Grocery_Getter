@@ -1,11 +1,13 @@
 import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import apiClient from '../services/apiClient'
 import useAuthStore from '../store/authStore'
 
 export default function LoginPage() {
   const navigate = useNavigate()
   const login = useAuthStore((s) => s.login)
+  const { t } = useTranslation()
 
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -23,7 +25,7 @@ export default function LoginPage() {
       navigate('/lists')
     } catch {
       // Requirement 1.6: do not distinguish which field is wrong
-      setError('Invalid email or password.')
+      setError(t('auth.invalidCredentials'))
     } finally {
       setLoading(false)
     }
@@ -34,13 +36,13 @@ export default function LoginPage() {
       <div className="w-full max-w-md bg-white rounded-2xl shadow-md p-8">
         <div className="flex flex-col items-center mb-6">
           <img src="/logo.svg" alt="Grocery Getter" className="h-20 w-auto mb-2" />
-          <h1 className="text-2xl font-bold text-gray-800">Sign in</h1>
+          <h1 className="text-2xl font-bold text-gray-800">{t('auth.signIn')}</h1>
         </div>
 
         <form onSubmit={handleSubmit} noValidate className="space-y-4">
           <div>
             <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
-              Email
+              {t('auth.email')}
             </label>
             <input
               id="email"
@@ -56,7 +58,7 @@ export default function LoginPage() {
 
           <div>
             <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
-              Password
+              {t('auth.password')}
             </label>
             <input
               id="password"
@@ -81,14 +83,14 @@ export default function LoginPage() {
             disabled={loading}
             className="w-full bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white font-semibold py-2 rounded-lg transition-colors"
           >
-            {loading ? 'Signing in…' : 'Sign in'}
+            {loading ? t('auth.signingIn') : t('auth.signIn')}
           </button>
         </form>
 
         <p className="mt-4 text-center text-sm text-gray-500">
-          New here?{' '}
+          {t('auth.newHere')}{' '}
           <Link to="/register" className="text-green-600 hover:underline font-medium">
-            Create an account
+            {t('auth.register')}
           </Link>
         </p>
       </div>

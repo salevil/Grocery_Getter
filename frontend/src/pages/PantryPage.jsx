@@ -1,8 +1,10 @@
 import { useCallback, useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import apiClient from '../services/apiClient'
 import BarcodeScanner from '../components/BarcodeScanner'
 
 export default function PantryPage() {
+  const { t } = useTranslation()
   const [items, setItems] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')

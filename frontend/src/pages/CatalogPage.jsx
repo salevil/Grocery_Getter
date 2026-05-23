@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import apiClient from '../services/apiClient'
 import BarcodeScanner from '../components/BarcodeScanner'
 import ProductForm from '../components/ProductForm'
@@ -14,6 +15,7 @@ import ProductForm from '../components/ProductForm'
  * Requirements: 3.3, 3.4, 3.5, 3.6, 3.7, 4.4
  */
 export default function CatalogPage() {
+  const { t } = useTranslation()
   const [products, setProducts] = useState([])
   const [stores, setStores] = useState([])
   const [loading, setLoading] = useState(true)

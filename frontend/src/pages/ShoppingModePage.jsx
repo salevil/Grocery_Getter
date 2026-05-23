@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import apiClient from '../services/apiClient'
 import * as wsClient from '../services/wsClient'
 import { enqueue, drain } from '../services/offlineQueue'
@@ -24,6 +25,7 @@ import BarcodeScanner from '../components/BarcodeScanner'
  */
 export default function ShoppingModePage() {
   const { storeId } = useParams()
+  const { t } = useTranslation()
 
   // -------------------------------------------------------------------------
   // State
