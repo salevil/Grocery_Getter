@@ -32,7 +32,10 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
       <div className="w-full max-w-md bg-white rounded-2xl shadow-md p-8">
-        <h1 className="text-2xl font-bold text-gray-800 mb-6 text-center">Sign in</h1>
+        <div className="flex flex-col items-center mb-6">
+          <img src="/logo.svg" alt="Grocery Getter" className="h-20 w-auto mb-2" />
+          <h1 className="text-2xl font-bold text-gray-800">Sign in</h1>
+        </div>
 
         <form onSubmit={handleSubmit} noValidate className="space-y-4">
           <div>
