@@ -8,6 +8,7 @@ import {
   Outlet,
 } from 'react-router-dom'
 import './index.css'
+import './i18n/index.js'
 
 import LoginPage from './pages/LoginPage.jsx'
 import RegisterPage from './pages/RegisterPage.jsx'
@@ -19,6 +20,7 @@ import ShoppingModePage from './pages/ShoppingModePage.jsx'
 import HouseholdPage from './pages/HouseholdPage.jsx'
 import PantryPage from './pages/PantryPage.jsx'
 import BottomNav from './components/BottomNav.jsx'
+import LanguageSwitcher from './components/LanguageSwitcher.jsx'
 
 // Auth guard: redirect to /login if no token in localStorage
 function RequireAuth() {
@@ -28,6 +30,10 @@ function RequireAuth() {
   }
   return (
     <>
+      {/* Language switcher — top right corner */}
+      <div className="fixed top-3 right-4 z-30">
+        <LanguageSwitcher />
+      </div>
       <div className="pb-16">
         <Outlet />
       </div>
