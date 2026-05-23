@@ -15,6 +15,20 @@ import apiClient from '../services/apiClient'
  *
  * Requirements: 4.1, 4.2, 4.3, 4.5, 11.2
  */
+const CATEGORIES = [
+  'Produce',
+  'Dairy',
+  'Meat & Fish',
+  'Frozen',
+  'Canned Goods',
+  'Bakery',
+  'Beverages',
+  'Snacks',
+  'Household',
+  'Personal Care',
+  'Other',
+]
+
 export default function ProductForm({ initialValues = {}, stores = [], onSuccess, onCancel }) {
   const isEdit = Boolean(initialValues.id)
 
@@ -22,6 +36,7 @@ export default function ProductForm({ initialValues = {}, stores = [], onSuccess
   const [brand, setBrand] = useState(initialValues.brand ?? '')
   const [quantity, setQuantity] = useState(initialValues.quantity ?? '')
   const [storeId, setStoreId] = useState(initialValues.store_id ?? '')
+  const [category, setCategory] = useState(initialValues.category ?? '')
   const [photoFile, setPhotoFile] = useState(null)
   const [photoError, setPhotoError] = useState('')
   const [serverError, setServerError] = useState('')
@@ -72,6 +87,7 @@ export default function ProductForm({ initialValues = {}, stores = [], onSuccess
         if (brand !== '') body.brand = brand || null
         if (quantity !== '') body.quantity = quantity || null
         body.store_id = storeId !== '' ? Number(storeId) : null
+        body.category = category || null
         const res = await apiClient.patch(`/api/catalog/products/${initialValues.id}`, body)
         data = res.data
 
@@ -94,6 +110,7 @@ export default function ProductForm({ initialValues = {}, stores = [], onSuccess
         if (quantity) formData.append('quantity', quantity)
         if (storeId !== '') formData.append('store_id', String(storeId))
         if (initialValues.upc) formData.append('upc', initialValues.upc)
+        if (category) formData.append('category', category)
         if (photoFile) formData.append('photo', photoFile)
 
         const res = await apiClient.post('/api/catalog/products', formData, {
@@ -181,6 +198,24 @@ export default function ProductForm({ initialValues = {}, stores = [], onSuccess
             <option key={s.id} value={s.id}>
               {s.name}
             </option>
+          ))}
+        </select>
+      </div>
+
+      {/* Category */}
+      <div>
+        <label htmlFor="pf-category" className="block text-sm font-medium text-gray-700 mb-1">
+          Category
+        </label>
+        <select
+          id="pf-category"
+          value={category}
+          onChange={(e) => setCategory(e.target.value)}
+          className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 bg-white"
+        >
+          <option value="">— None —</option>
+          {CATEGORIES.map((cat) => (
+            <option key={cat} value={cat}>{cat}</option>
           ))}
         </select>
       </div>

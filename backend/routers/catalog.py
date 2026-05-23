@@ -217,17 +217,12 @@ async def create_product(
     quantity: str | None = Form(None),
     store_id: int | None = Form(None),
     upc: str | None = Form(None),
+    category: str | None = Form(None),
     photo: UploadFile | None = File(None),
     current_user: User = Depends(get_current_household_user),
     db: AsyncSession = Depends(get_db),
 ) -> ProductResponse:
-    """Create a new product in the household catalog.
-
-    Accepts multipart/form-data so that an optional photo can be uploaded
-    alongside the product fields in a single request.
-    If a photo is provided it is uploaded to the Photo Store and the
-    returned URL is stored on the product.
-    """
+    """Create a new product in the household catalog."""
     photo_url: str | None = None
     if photo is not None and photo.filename:
         photo_url = await photo_service.upload_photo(photo)
@@ -239,6 +234,7 @@ async def create_product(
         quantity=quantity,
         store_id=store_id,
         upc=upc,
+        category=category,
         photo_url=photo_url,
     )
     db.add(product)

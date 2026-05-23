@@ -19,6 +19,7 @@ class Product(Base):
     name: Mapped[str] = mapped_column(Text, nullable=False)
     brand: Mapped[str | None] = mapped_column(Text, nullable=True)
     quantity: Mapped[str | None] = mapped_column(Text, nullable=True)
+    category: Mapped[str | None] = mapped_column(Text, nullable=True)
     store_id: Mapped[int | None] = mapped_column(
         Integer, ForeignKey("stores.id", ondelete="SET NULL"), nullable=True
     )

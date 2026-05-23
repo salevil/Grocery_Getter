@@ -61,6 +61,7 @@ class ProductCreate(BaseModel):
     quantity: str | None = None
     store_id: int | None = None
     upc: str | None = None
+    category: str | None = None
 
 
 class ProductUpdate(BaseModel):
@@ -74,6 +75,7 @@ class ProductUpdate(BaseModel):
     quantity: str | None = None
     store_id: int | None = None
     upc: str | None = None
+    category: str | None = None
 
 
 class ProductResponse(BaseModel):
@@ -89,6 +91,7 @@ class ProductResponse(BaseModel):
     store_id: int | None
     photo_url: str | None
     household_id: int
+    category: str | None
 
 
 # ---------------------------------------------------------------------------
