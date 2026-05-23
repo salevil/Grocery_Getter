@@ -315,7 +315,7 @@ export default function CatalogPage() {
         )}
 
         {/* ---------------------------------------------------------------- */}
-        {/* Product grid                                                      */}
+        {/* Product grid — grouped by category                               */}
         {/* ---------------------------------------------------------------- */}
         {mode === 'list' && (
           <>
@@ -325,73 +325,67 @@ export default function CatalogPage() {
                 <p className="text-sm mt-1">Add your first product using the buttons above.</p>
               </div>
             ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {products.map((product) => (
-                  <div
-                    key={product.id}
-                    className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 flex gap-4 items-start"
-                  >
-                    {/* Thumbnail */}
-                    {product.photo_url ? (
-                      <img
-                        src={product.photo_url}
-                        alt={product.name}
-                        className="w-16 h-16 rounded-lg object-cover flex-shrink-0 bg-gray-100"
-                      />
-                    ) : (
-                      <div
-                        className="w-16 h-16 rounded-lg bg-gray-100 flex items-center justify-center flex-shrink-0"
-                        aria-hidden="true"
-                      >
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M20 7H4a2 2 0 00-2 2v9a2 2 0 002 2h16a2 2 0 002-2V9a2 2 0 00-2-2z" />
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M16 3H8l-2 4h12l-2-4z" />
-                        </svg>
+              (() => {
+                // Group products by category
+                const grouped = {}
+                products.forEach((p) => {
+                  const cat = p.category || 'Uncategorized'
+                  if (!grouped[cat]) grouped[cat] = []
+                  grouped[cat].push(p)
+                })
+                const sortedCats = Object.keys(grouped).sort((a, b) =>
+                  a === 'Uncategorized' ? 1 : b === 'Uncategorized' ? -1 : a.localeCompare(b)
+                )
+                return (
+                  <div className="space-y-4">
+                    {sortedCats.map((cat) => (
+                      <div key={cat} className="bg-white rounded-2xl shadow-sm overflow-hidden">
+                        <div className="px-4 py-2 bg-gray-50 border-b border-gray-100">
+                          <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide">{cat}</h3>
+                        </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-0 divide-y divide-gray-50">
+                          {grouped[cat].map((product) => (
+                            <div key={product.id} className="p-4 flex gap-4 items-start">
+                              {product.photo_url ? (
+                                <img src={product.photo_url} alt={product.name} className="w-14 h-14 rounded-lg object-cover flex-shrink-0 bg-gray-100" />
+                              ) : (
+                                <div className="w-14 h-14 rounded-lg bg-gray-100 flex items-center justify-center flex-shrink-0" aria-hidden="true">
+                                  <svg xmlns="http://www.w3.org/2000/svg" className="h-7 w-7 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M20 7H4a2 2 0 00-2 2v9a2 2 0 002 2h16a2 2 0 002-2V9a2 2 0 00-2-2z" />
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M16 3H8l-2 4h12l-2-4z" />
+                                  </svg>
+                                </div>
+                              )}
+                              <div className="flex-1 min-w-0">
+                                <p className="font-semibold text-gray-800 truncate">{product.name}</p>
+                                {product.brand && <p className="text-sm text-gray-500 truncate">{product.brand}</p>}
+                                {product.quantity && <p className="text-xs text-gray-400 truncate">{product.quantity}</p>}
+                                {storeNameById(product.store_id) && (
+                                  <span className="inline-block mt-1 text-xs bg-blue-50 text-blue-700 rounded px-2 py-0.5">
+                                    {storeNameById(product.store_id)}
+                                  </span>
+                                )}
+                              </div>
+                              <div className="flex flex-col gap-1 flex-shrink-0">
+                                <button type="button" aria-label={`Edit ${product.name}`} onClick={() => { setEditProduct(product); setMode('edit') }} className="text-gray-400 hover:text-gray-600 transition-colors">
+                                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                  </svg>
+                                </button>
+                                <button type="button" aria-label={`Delete ${product.name}`} onClick={() => handleDeleteProduct(product)} className="text-gray-400 hover:text-red-600 transition-colors">
+                                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                  </svg>
+                                </button>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
                       </div>
-                    )}
-
-                    {/* Info */}
-                    <div className="flex-1 min-w-0">
-                      <p className="font-semibold text-gray-800 truncate">{product.name}</p>
-                      {product.brand && (
-                        <p className="text-sm text-gray-500 truncate">{product.brand}</p>
-                      )}
-                      {product.quantity && (
-                        <p className="text-xs text-gray-400 truncate">{product.quantity}</p>
-                      )}
-                      {storeNameById(product.store_id) && (
-                        <span className="inline-block mt-1 text-xs bg-blue-50 text-blue-700 rounded px-2 py-0.5">
-                          {storeNameById(product.store_id)}
-                        </span>
-                      )}
-                    </div>
-
-                    {/* Edit + Delete buttons */}
-                    <div className="flex flex-col gap-1 flex-shrink-0">
-                      <button
-                        type="button"
-                        aria-label={`Edit ${product.name}`}
-                        onClick={() => { setEditProduct(product); setMode('edit') }}
-                        className="text-gray-400 hover:text-gray-600 transition-colors"
-                      >
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                        </svg>
-                      </button>
-                      <button
-                        type="button"
-                        aria-label={`Delete ${product.name}`}
-                        onClick={() => handleDeleteProduct(product)}
-                        className="text-gray-400 hover:text-red-600 transition-colors"
-                      >
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                        </svg>
-                      </button>
-                    </div>
+                    ))}
                   </div>
-                ))}
-              </div>
+                )
+              })()
             )}
           </>
         )}

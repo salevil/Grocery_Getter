@@ -196,24 +196,39 @@ export default function PantryPage() {
           </div>
         )}
 
-        {/* In stock */}
+        {/* In stock — grouped by category */}
         {inStock.length === 0 && outOfStock.length === 0 ? (
           <div className="bg-white rounded-2xl shadow-md p-8 text-center text-gray-500">
             <p className="text-lg font-medium">Pantry is empty</p>
             <p className="text-sm mt-1">Scan items after shopping to track your stock.</p>
           </div>
-        ) : inStock.length > 0 && (
-          <div className="bg-white rounded-2xl shadow-md overflow-hidden">
-            <div className="px-5 py-3 border-b border-gray-100">
-              <h2 className="text-sm font-semibold text-gray-700">In stock ({inStock.length})</h2>
-            </div>
-            <ul className="divide-y divide-gray-50">
-              {inStock.map((item) => (
-                <PantryRow key={item.id} item={item} onDelta={handleDelta} onSetQty={handleSetQty} />
+        ) : inStock.length > 0 && (() => {
+          const grouped = {}
+          inStock.forEach((item) => {
+            const cat = item.product.category || 'Uncategorized'
+            if (!grouped[cat]) grouped[cat] = []
+            grouped[cat].push(item)
+          })
+          const sortedCats = Object.keys(grouped).sort((a, b) =>
+            a === 'Uncategorized' ? 1 : b === 'Uncategorized' ? -1 : a.localeCompare(b)
+          )
+          return (
+            <div className="space-y-3">
+              {sortedCats.map((cat) => (
+                <div key={cat} className="bg-white rounded-2xl shadow-md overflow-hidden">
+                  <div className="px-5 py-2 bg-gray-50 border-b border-gray-100">
+                    <h2 className="text-xs font-semibold text-gray-500 uppercase tracking-wide">{cat} ({grouped[cat].length})</h2>
+                  </div>
+                  <ul className="divide-y divide-gray-50">
+                    {grouped[cat].map((item) => (
+                      <PantryRow key={item.id} item={item} onDelta={handleDelta} onSetQty={handleSetQty} />
+                    ))}
+                  </ul>
+                </div>
               ))}
-            </ul>
-          </div>
-        )}
+            </div>
+          )
+        })()}
       </div>
 
       {/* Scanner modal */}

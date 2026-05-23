@@ -382,6 +382,11 @@ export default function ShoppingListPage() {
                                 {item.product.brand}
                               </span>
                             )}
+                            {item.product.category && (
+                              <span className="ml-1 text-xs text-gray-400 font-normal">
+                                · {item.product.category}
+                              </span>
+                            )}
                           </span>
 
                           {/* Quantity stepper */}
