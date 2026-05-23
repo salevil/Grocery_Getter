@@ -11,6 +11,7 @@ from backend.models.invitation import Invitation
 from backend.models.store import Store
 from backend.models.product import Product
 from backend.models.list_item import ListItem
+from backend.models.pantry_item import PantryItem
 
 __all__ = [
     "Household",
@@ -19,4 +20,5 @@ __all__ = [
     "Store",
     "Product",
     "ListItem",
+    "PantryItem",
 ]

@@ -21,6 +21,16 @@ const tabs = [
     ),
   },
   {
+    to: '/pantry',
+    label: 'Pantry',
+    icon: (active) => (
+      <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={active ? 2.5 : 1.5}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M5 3h14a2 2 0 012 2v14a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2z" />
+        <path strokeLinecap="round" strokeLinejoin="round" d="M9 3v18M15 3v18M3 9h18M3 15h18" />
+      </svg>
+    ),
+  },
+  {
     to: '/stores',
     label: 'Stores',
     icon: (active) => (

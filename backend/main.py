@@ -5,7 +5,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
-from backend.routers import auth, catalog, lists, websocket
+from backend.routers import auth, catalog, lists, websocket, pantry
 
 
 class HelloResponse(BaseModel):
@@ -37,6 +37,7 @@ app.include_router(auth.router)
 app.include_router(catalog.router)
 app.include_router(lists.router)
 app.include_router(websocket.router)
+app.include_router(pantry.router)
 
 
 @app.get("/api/hello", response_model=HelloResponse)
