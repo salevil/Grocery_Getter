@@ -200,6 +200,13 @@ export default function ShoppingModePage() {
 
     try {
       await apiClient.patch(url, body)
+      // When checking off, add the quantity to the pantry (best-effort)
+      if (newChecked && item.product?.id) {
+        apiClient.post(
+          `/api/pantry/delta?product_id=${item.product.id}`,
+          { delta: item.quantity }
+        ).catch(() => {}) // fire-and-forget, don't block the UI
+      }
     } catch {
       // Revert on failure
       setItems((prev) =>
@@ -256,6 +263,13 @@ export default function ShoppingModePage() {
 
     try {
       await apiClient.patch(url, body)
+      // Add purchased quantity to pantry (best-effort)
+      if (item.product?.id) {
+        apiClient.post(
+          `/api/pantry/delta?product_id=${item.product.id}`,
+          { delta: qty }
+        ).catch(() => {})
+      }
     } catch {
       // Revert
       setItems((prev) =>

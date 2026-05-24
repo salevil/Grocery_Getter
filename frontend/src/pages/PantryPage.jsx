@@ -13,6 +13,8 @@ export default function PantryPage() {
   const [scanResult, setScanResult] = useState(null) // { item, upc }
   const [scanQty, setScanQty] = useState('1')
   const [scanError, setScanError] = useState('')
+  const [addToListItem, setAddToListItem] = useState(null) // item pending add-to-list confirmation
+  const [addToListQty, setAddToListQty] = useState('1')
 
   // -------------------------------------------------------------------------
   // Load pantry
@@ -103,11 +105,22 @@ export default function PantryPage() {
   // -------------------------------------------------------------------------
   // Add to shopping list
   // -------------------------------------------------------------------------
-  async function handleAddToList(item) {
+  function handleAddToList(item) {
+    setAddToListItem(item)
+    setAddToListQty('1')
+  }
+
+  async function confirmAddToList() {
+    if (!addToListItem) return
+    const qty = Math.max(1, parseInt(addToListQty, 10) || 1)
+    // Optimistically remove from suggestions
+    setItems((prev) => prev.filter((i) => i.product_id !== addToListItem.product_id))
+    setAddToListItem(null)
+    setAddToListQty('1')
     try {
-      await apiClient.post('/api/lists/items', { product_id: item.product_id, quantity: 1 })
+      await apiClient.post('/api/lists/items', { product_id: addToListItem.product_id, quantity: qty })
     } catch {
-      // ignore
+      // ignore — item is already off the suggestions, no need to revert
     }
   }
 
@@ -257,9 +270,42 @@ export default function PantryPage() {
         </div>
       )}
 
-      {/* Quantity confirmation after scan */}
-      {scanResult && (
+      {/* Add-to-list quantity confirmation */}
+      {addToListItem && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4" role="dialog" aria-modal="true">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm p-6 space-y-4">
+            <h2 className="text-base font-semibold text-gray-800">Add to shopping list</h2>
+            <p className="text-sm text-gray-600">
+              How many <span className="font-medium">{addToListItem.product.name}</span> do you need?
+            </p>
+            <div className="flex items-center gap-3">
+              <label htmlFor="add-list-qty" className="text-sm font-medium text-gray-700 flex-shrink-0">Quantity</label>
+              <input
+                id="add-list-qty"
+                type="number"
+                min="1"
+                value={addToListQty}
+                onChange={(e) => setAddToListQty(e.target.value)}
+                className="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+                autoFocus
+              />
+            </div>
+            <div className="flex gap-3">
+              <button type="button" onClick={() => { setAddToListItem(null); setAddToListQty('1') }}
+                className="flex-1 py-2.5 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold text-sm transition-colors">
+                Cancel
+              </button>
+              <button type="button" onClick={confirmAddToList}
+                className="flex-1 py-2.5 rounded-xl bg-green-600 hover:bg-green-700 text-white font-semibold text-sm transition-colors">
+                Add to list
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Quantity confirmation after scan */}
+      {scanResult && (        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4" role="dialog" aria-modal="true">
           <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm p-6 space-y-4">
             <h2 className="text-base font-semibold text-gray-800">
               {scanMode === 'use' ? 'How many did you use?' : 'How many did you add?'}
