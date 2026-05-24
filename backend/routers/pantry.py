@@ -182,13 +182,18 @@ async def pantry_suggestions(
 # GET /api/pantry/lookup/{upc} — look up pantry item by product UPC
 # ---------------------------------------------------------------------------
 
-@router.get("/lookup/{upc}", response_model=PantryItemResponse | None)
+@router.get("/lookup/{upc}")
 async def lookup_pantry_by_upc(
     upc: str,
     current_user: User = Depends(get_current_household_user),
     db: AsyncSession = Depends(get_db),
-) -> PantryItemResponse | None:
-    """Find a pantry item by scanning a product UPC."""
+) -> dict | None:
+    """Find a pantry item by scanning a product UPC.
+    
+    Returns the pantry item if it exists, or a synthetic entry with quantity=0
+    if the product is in the catalog but not yet in the pantry.
+    Returns None if the product is not in the catalog at all.
+    """
     prod_result = await db.execute(
         select(Product).where(
             Product.household_id == current_user.household_id,
@@ -208,6 +213,15 @@ async def lookup_pantry_by_upc(
         .options(selectinload(PantryItem.product))
     )
     item = result.scalar_one_or_none()
-    if item is None:
-        return None
-    return PantryItemResponse.model_validate(item)
+    
+    if item is not None:
+        return PantryItemResponse.model_validate(item).model_dump()
+    
+    # Product exists in catalog but no pantry entry yet — return synthetic entry
+    from backend.schemas.catalog import ProductResponse
+    return {
+        "id": None,
+        "product_id": product.id,
+        "quantity": 0,
+        "product": ProductResponse.model_validate(product).model_dump(),
+    }

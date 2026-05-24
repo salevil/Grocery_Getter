@@ -90,8 +90,8 @@ export default function PantryPage() {
         { delta }
       )
       setItems((prev) => {
-        const exists = prev.find((i) => i.id === data.id)
-        return exists ? prev.map((i) => i.id === data.id ? data : i) : [...prev, data]
+        const exists = prev.find((i) => i.product_id === data.product_id)
+        return exists ? prev.map((i) => i.product_id === data.product_id ? data : i) : [...prev, data]
       })
     } catch {
       // ignore

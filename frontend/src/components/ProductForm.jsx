@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import apiClient from '../services/apiClient'
 
 /**
@@ -31,6 +32,7 @@ const CATEGORIES = [
 
 export default function ProductForm({ initialValues = {}, stores = [], onSuccess, onCancel }) {
   const isEdit = Boolean(initialValues.id)
+  const { t } = useTranslation()
 
   const [name, setName] = useState(initialValues.name ?? '')
   const [brand, setBrand] = useState(initialValues.brand ?? '')

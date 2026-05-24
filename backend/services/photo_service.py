@@ -6,7 +6,7 @@ Uses Supabase Storage REST API directly via httpx.
 Environment variables:
     SUPABASE_URL         – your Supabase project URL
     SUPABASE_SERVICE_KEY – service_role key (full storage access)
-    PHOTO_BUCKET_NAME    – storage bucket name (default: "product-photos")
+    PHOTO_BUCKET_NAME    – storage bucket name (default: "product_photos")
 """
 
 import logging
@@ -23,7 +23,7 @@ MAX_FILE_SIZE_BYTES = 5 * 1024 * 1024  # 5 MB
 
 SUPABASE_URL: str = os.getenv("SUPABASE_URL", "").rstrip("/")
 SUPABASE_SERVICE_KEY: str = os.getenv("SUPABASE_SERVICE_KEY", "")
-BUCKET_NAME: str = os.getenv("PHOTO_BUCKET_NAME", "product-photos")
+BUCKET_NAME: str = os.getenv("PHOTO_BUCKET_NAME", "product_photos")
 
 
 def _extension_for_content_type(content_type: str) -> str:
