@@ -37,6 +37,7 @@ export default function ProductForm({ initialValues = {}, stores = [], onSuccess
   const [name, setName] = useState(initialValues.name ?? '')
   const [brand, setBrand] = useState(initialValues.brand ?? '')
   const [quantity, setQuantity] = useState(initialValues.quantity ?? '')
+  const [upc, setUpc] = useState(initialValues.upc ?? '')
   const [storeId, setStoreId] = useState(initialValues.store_id ?? '')
   const [category, setCategory] = useState(initialValues.category ?? '')
   const [photoFile, setPhotoFile] = useState(null)
@@ -90,6 +91,7 @@ export default function ProductForm({ initialValues = {}, stores = [], onSuccess
         if (quantity !== '') body.quantity = quantity || null
         body.store_id = storeId !== '' ? Number(storeId) : null
         body.category = category || null
+        body.upc = upc || null
         const res = await apiClient.patch(`/api/catalog/products/${initialValues.id}`, body)
         data = res.data
 
@@ -111,7 +113,7 @@ export default function ProductForm({ initialValues = {}, stores = [], onSuccess
         if (brand) formData.append('brand', brand)
         if (quantity) formData.append('quantity', quantity)
         if (storeId !== '') formData.append('store_id', String(storeId))
-        if (initialValues.upc) formData.append('upc', initialValues.upc)
+        if (upc) formData.append('upc', upc)
         if (category) formData.append('category', category)
         if (photoFile) formData.append('photo', photoFile)
 
@@ -184,8 +186,23 @@ export default function ProductForm({ initialValues = {}, stores = [], onSuccess
         />
       </div>
 
-      {/* Preferred Store */}
+      {/* Barcode / UPC */}
       <div>
+        <label htmlFor="pf-upc" className="block text-sm font-medium text-gray-700 mb-1">
+          Barcode (UPC)
+        </label>
+        <input
+          id="pf-upc"
+          type="text"
+          value={upc}
+          onChange={(e) => setUpc(e.target.value)}
+          className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 font-mono"
+          placeholder="e.g. 012345678905"
+        />
+        <p className="mt-1 text-xs text-gray-400">Used to match scans in the pantry and shopping mode.</p>
+      </div>
+
+      {/* Preferred Store */}      <div>
         <label htmlFor="pf-store" className="block text-sm font-medium text-gray-700 mb-1">
           Preferred Store
         </label>
