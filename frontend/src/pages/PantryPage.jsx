@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import apiClient from '../services/apiClient'
 import BarcodeScanner from '../components/BarcodeScanner'
@@ -237,24 +237,12 @@ export default function PantryPage() {
                 </div>
                 <ul className="divide-y divide-gray-50">
                   {outOfStock.map((item) => (
-                    <li key={item.id ?? item.product_id} className="px-5 py-3 flex items-center gap-3">
-                      {item.product.photo_url ? (
-                        <img src={item.product.photo_url} alt={item.product.name} className="w-10 h-10 rounded-lg object-cover flex-shrink-0" />
-                      ) : (
-                        <div className="w-10 h-10 rounded-lg bg-gray-100 flex-shrink-0" />
-                      )}
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-gray-800 truncate">{item.product.name}</p>
-                        {item.product.brand && <p className="text-xs text-gray-500 truncate">{item.product.brand}</p>}
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => handleAddToList(item)}
-                        className="flex-shrink-0 px-3 py-1.5 rounded-lg bg-green-600 hover:bg-green-700 text-white text-xs font-semibold transition-colors"
-                      >
-                        Add to list
-                      </button>
-                    </li>
+                    <SwipeableSuggestionRow
+                      key={item.id ?? item.product_id}
+                      item={item}
+                      onAdd={() => handleAddToList(item)}
+                      onDismiss={() => setItems((prev) => prev.filter((i) => i.product_id !== item.product_id))}
+                    />
                   ))}
                 </ul>
               </div>
@@ -442,6 +430,79 @@ function PantryRow({ item, onDelta, onSetQty }) {
         <button type="button" onClick={() => onDelta(item, 1)}
           className="w-7 h-7 flex items-center justify-center rounded-full bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold text-sm transition-colors">
           +
+        </button>
+      </div>
+    </li>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// Swipeable suggestion row — swipe right to dismiss
+// ---------------------------------------------------------------------------
+function SwipeableSuggestionRow({ item, onAdd, onDismiss }) {
+  const [offsetX, setOffsetX] = useState(0)
+  const [dismissed, setDismissed] = useState(false)
+  const startXRef = useRef(null)
+  const THRESHOLD = 80 // px needed to trigger dismiss
+
+  function handleTouchStart(e) {
+    startXRef.current = e.touches[0].clientX
+  }
+
+  function handleTouchMove(e) {
+    if (startXRef.current === null) return
+    const delta = e.touches[0].clientX - startXRef.current
+    if (delta > 0) setOffsetX(delta) // only allow rightward swipe
+  }
+
+  function handleTouchEnd() {
+    if (offsetX >= THRESHOLD) {
+      setDismissed(true)
+      setTimeout(onDismiss, 250) // let the slide-out animation finish
+    } else {
+      setOffsetX(0)
+    }
+    startXRef.current = null
+  }
+
+  if (dismissed) return null
+
+  return (
+    <li
+      className="relative overflow-hidden"
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
+    >
+      {/* Dismiss hint behind the row */}
+      <div className="absolute inset-0 flex items-center px-5 bg-gray-100">
+        <span className="text-xs text-gray-400 font-medium">Dismiss</span>
+      </div>
+
+      {/* Row content — slides right on swipe */}
+      <div
+        className="relative flex items-center gap-3 px-5 py-3 bg-white transition-transform"
+        style={{
+          transform: `translateX(${offsetX}px)`,
+          transition: offsetX === 0 ? 'transform 0.2s ease' : 'none',
+          opacity: dismissed ? 0 : 1,
+        }}
+      >
+        {item.product.photo_url ? (
+          <img src={item.product.photo_url} alt={item.product.name} className="w-10 h-10 rounded-lg object-cover flex-shrink-0" />
+        ) : (
+          <div className="w-10 h-10 rounded-lg bg-gray-100 flex-shrink-0" />
+        )}
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-medium text-gray-800 truncate">{item.product.name}</p>
+          {item.product.brand && <p className="text-xs text-gray-500 truncate">{item.product.brand}</p>}
+        </div>
+        <button
+          type="button"
+          onClick={onAdd}
+          className="flex-shrink-0 px-3 py-1.5 rounded-lg bg-green-600 hover:bg-green-700 text-white text-xs font-semibold transition-colors"
+        >
+          Add to list
         </button>
       </div>
     </li>
