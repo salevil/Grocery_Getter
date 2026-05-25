@@ -2,32 +2,50 @@ import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import apiClient from '../services/apiClient'
 
-/**
- * ProductForm
- *
- * Handles both CREATE and EDIT modes for a catalog product.
- *
- * Props:
- *   initialValues  — { id?, name?, brand?, quantity?, store_id?, upc? }
- *                    When `id` is present the form operates in EDIT mode.
- *   stores         — Array of { id, name } objects for the preferred-store dropdown.
- *   onSuccess(product) — Called with the saved product after a successful submit.
- *   onCancel()     — Called when the user dismisses the form without saving.
- *
- * Requirements: 4.1, 4.2, 4.3, 4.5, 11.2
- */
 const CATEGORIES = [
   'Produce',
-  'Dairy',
-  'Meat & Fish',
+  'Dairy & Eggs',
+  'Meat',
+  'Fish & Seafood',
+  'Deli & Charcuterie',
+  'Bread & Bakery',
   'Frozen',
-  'Canned Goods',
-  'Bakery',
+  'Canned & Jarred',
+  'Pasta, Rice & Grains',
+  'Sauces & Condiments',
+  'Breakfast & Cereals',
+  'Snacks & Sweets',
   'Beverages',
-  'Snacks',
-  'Household',
+  'Dairy Alternatives',
+  'Baby & Kids',
+  'Health & Pharmacy',
+  'Cleaning',
   'Personal Care',
+  'Pet',
   'Other',
+]
+
+const CATEGORY_GUIDE = [
+  { name: 'Produce',              desc: 'Fresh fruit & vegetables' },
+  { name: 'Dairy & Eggs',         desc: 'Milk, cheese, yogurt, eggs' },
+  { name: 'Meat',                 desc: 'Beef, pork, lamb, poultry' },
+  { name: 'Fish & Seafood',       desc: 'Fresh, smoked, tinned fish' },
+  { name: 'Deli & Charcuterie',   desc: 'Cold cuts, pâté, prepared meats' },
+  { name: 'Bread & Bakery',       desc: 'Bread, pastries, wraps' },
+  { name: 'Frozen',               desc: 'Everything frozen' },
+  { name: 'Canned & Jarred',      desc: 'Tinned tomatoes, beans, jams, pickles' },
+  { name: 'Pasta, Rice & Grains', desc: 'Dry pasta, rice, couscous, lentils' },
+  { name: 'Sauces & Condiments',  desc: "Ketchup, mustard, olive oil, vinegar, spices" },
+  { name: 'Breakfast & Cereals',  desc: 'Cereal, oats, granola, spreads' },
+  { name: 'Snacks & Sweets',      desc: 'Crisps, chocolate, biscuits, nuts' },
+  { name: 'Beverages',            desc: 'Water, juice, coffee, tea, alcohol' },
+  { name: 'Dairy Alternatives',   desc: 'Oat milk, soy yogurt, vegan cheese' },
+  { name: 'Baby & Kids',          desc: 'Baby food, nappies' },
+  { name: 'Health & Pharmacy',    desc: 'Vitamins, medicine' },
+  { name: 'Cleaning',             desc: 'Detergent, bleach, bin bags' },
+  { name: 'Personal Care',        desc: 'Shampoo, soap, toothpaste' },
+  { name: 'Pet',                  desc: 'Pet food, litter' },
+  { name: 'Other',                desc: "Anything that doesn't fit above" },
 ]
 
 export default function ProductForm({ initialValues = {}, stores = [], onSuccess, onCancel }) {
@@ -44,6 +62,7 @@ export default function ProductForm({ initialValues = {}, stores = [], onSuccess
   const [photoError, setPhotoError] = useState('')
   const [serverError, setServerError] = useState('')
   const [submitting, setSubmitting] = useState(false)
+  const [categoryGuideOpen, setCategoryGuideOpen] = useState(false)
 
   // Req 11.2: client-side photo validation — JPEG/PNG only, ≤ 5 MB
   function handlePhotoChange(e) {
@@ -223,9 +242,19 @@ export default function ProductForm({ initialValues = {}, stores = [], onSuccess
 
       {/* Category */}
       <div>
-        <label htmlFor="pf-category" className="block text-sm font-medium text-gray-700 mb-1">
-          Category
-        </label>
+        <div className="flex items-center gap-1.5 mb-1">
+          <label htmlFor="pf-category" className="block text-sm font-medium text-gray-700">
+            Category
+          </label>
+          <button
+            type="button"
+            onClick={() => setCategoryGuideOpen(true)}
+            aria-label="Category guide"
+            className="w-4 h-4 rounded-full bg-gray-300 hover:bg-gray-400 text-white text-xs font-bold flex items-center justify-center transition-colors flex-shrink-0"
+          >
+            ?
+          </button>
+        </div>
         <select
           id="pf-category"
           value={category}
@@ -290,6 +319,51 @@ export default function ProductForm({ initialValues = {}, stores = [], onSuccess
           Cancel
         </button>
       </div>
+
+      {/* Category guide modal */}
+      {categoryGuideOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Category guide"
+          onClick={(e) => { if (e.target === e.currentTarget) setCategoryGuideOpen(false) }}
+        >
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-md max-h-[80vh] flex flex-col">
+            <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
+              <h2 className="text-base font-semibold text-gray-800">Category guide</h2>
+              <button
+                type="button"
+                onClick={() => setCategoryGuideOpen(false)}
+                className="text-gray-400 hover:text-gray-600 transition-colors"
+                aria-label="Close"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            <div className="overflow-y-auto px-5 py-3">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="text-left text-xs text-gray-400 uppercase tracking-wide border-b border-gray-100">
+                    <th className="pb-2 font-semibold w-2/5">Category</th>
+                    <th className="pb-2 font-semibold">What goes in it</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-50">
+                  {CATEGORY_GUIDE.map((row) => (
+                    <tr key={row.name}>
+                      <td className="py-2 pr-3 font-medium text-gray-700 align-top">{row.name}</td>
+                      <td className="py-2 text-gray-500 align-top">{row.desc}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      )}
     </form>
   )
 }
