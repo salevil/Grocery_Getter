@@ -176,7 +176,7 @@ export default function CatalogPage() {
       <div className="max-w-3xl mx-auto space-y-6">
 
         {/* Header */}
-        <div className="flex items-center justify-between">
+        <div className="space-y-3">
           <h1 className="text-2xl font-bold text-gray-800">Product Catalog</h1>
           <div className="flex gap-2">
             <button
@@ -184,7 +184,6 @@ export default function CatalogPage() {
               onClick={() => { setMode('scan'); setScanError('') }}
               className="flex items-center gap-1 px-3 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium transition-colors"
             >
-              {/* barcode icon */}
               <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden="true">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M3 7V5a2 2 0 012-2h2M17 3h2a2 2 0 012 2v2M21 17v2a2 2 0 01-2 2h-2M7 21H5a2 2 0 01-2-2v-2" />
                 <line x1="7" y1="8" x2="7" y2="16" strokeWidth={2} />

@@ -292,23 +292,19 @@ export default function ShoppingListPage() {
               className="bg-white rounded-2xl shadow-md overflow-hidden"
             >
               {/* Section header */}
-              <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
+              <div className="px-5 py-3 border-b border-gray-100 space-y-2">
+                {/* Store name + item count */}
                 <button
                   type="button"
                   onClick={() => toggleCollapse(key)}
-                  className="flex items-center gap-2 flex-1 text-left"
+                  className="flex items-center gap-2 w-full text-left"
                   aria-expanded={!isCollapsed}
                   aria-controls={`section-${key}`}
                 >
-                  {/* Chevron */}
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
-                    className={`h-4 w-4 text-gray-400 transition-transform ${isCollapsed ? '-rotate-90' : ''}`}
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                    strokeWidth={2}
-                    aria-hidden="true"
+                    className={`h-4 w-4 text-gray-400 transition-transform flex-shrink-0 ${isCollapsed ? '-rotate-90' : ''}`}
+                    fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden="true"
                   >
                     <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
                   </svg>
@@ -320,9 +316,8 @@ export default function ShoppingListPage() {
                   </span>
                 </button>
 
-                {/* Section actions */}
-                <div className="flex items-center gap-2 ml-3">
-                  {/* Add item button */}
+                {/* Action buttons on their own row */}
+                <div className="flex items-center gap-2 pl-6">
                   <button
                     type="button"
                     onClick={() => openAddModal(section)}
@@ -334,8 +329,6 @@ export default function ShoppingListPage() {
                     </svg>
                     {t('list.addItem')}
                   </button>
-
-                  {/* Go shopping button (only for named stores) */}
                   {!isUnassigned && (
                     <button
                       type="button"
