@@ -5,6 +5,7 @@ import apiClient from '../services/apiClient'
 import * as wsClient from '../services/wsClient'
 import { enqueue, drain } from '../services/offlineQueue'
 import BarcodeScanner from '../components/BarcodeScanner'
+import { isPantryEnabled } from './PantryPage'
 
 /**
  * ShoppingModePage
@@ -200,8 +201,8 @@ export default function ShoppingModePage() {
 
     try {
       await apiClient.patch(url, body)
-      // When checking off, add the quantity to the pantry (best-effort)
-      if (newChecked && item.product?.id) {
+      // When checking off, add the quantity to the pantry (best-effort, only if pantry enabled)
+      if (newChecked && item.product?.id && isPantryEnabled()) {
         apiClient.post(
           `/api/pantry/delta?product_id=${item.product.id}`,
           { delta: item.quantity }
@@ -263,8 +264,8 @@ export default function ShoppingModePage() {
 
     try {
       await apiClient.patch(url, body)
-      // Add purchased quantity to pantry (best-effort)
-      if (item.product?.id) {
+      // Add purchased quantity to pantry (best-effort, only if pantry enabled)
+      if (item.product?.id && isPantryEnabled()) {
         apiClient.post(
           `/api/pantry/delta?product_id=${item.product.id}`,
           { delta: qty }

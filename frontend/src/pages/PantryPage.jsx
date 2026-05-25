@@ -3,11 +3,24 @@ import { useTranslation } from 'react-i18next'
 import apiClient from '../services/apiClient'
 import BarcodeScanner from '../components/BarcodeScanner'
 
+const PANTRY_ENABLED_KEY = 'pantry_enabled'
+
+export function isPantryEnabled() {
+  return localStorage.getItem(PANTRY_ENABLED_KEY) !== 'false'
+}
+
 export default function PantryPage() {
   const { t } = useTranslation()
+  const [enabled, setEnabled] = useState(isPantryEnabled)
   const [items, setItems] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+
+  function toggleEnabled() {
+    const next = !enabled
+    setEnabled(next)
+    localStorage.setItem(PANTRY_ENABLED_KEY, String(next))
+  }
   const [scannerOpen, setScannerOpen] = useState(false)
   const [scanMode, setScanMode] = useState('use') // 'use' | 'add'
   const [scanResult, setScanResult] = useState(null) // { item, upc }
@@ -130,7 +143,7 @@ export default function PantryPage() {
   const outOfStock = items.filter((i) => i.quantity === 0)
   const inStock = items.filter((i) => i.quantity > 0)
 
-  if (loading) {
+  if (loading && enabled) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <p className="text-gray-500 animate-pulse">Loading pantry…</p>
@@ -145,105 +158,143 @@ export default function PantryPage() {
         {/* Header */}
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-bold text-gray-800">Pantry</h1>
-          <div className="flex gap-2">
-            <button
-              type="button"
-              onClick={() => { setScanMode('use'); setScannerOpen(true); setScanError('') }}
-              className="flex items-center gap-1 px-3 py-2 rounded-lg bg-orange-500 hover:bg-orange-600 text-white text-sm font-medium transition-colors"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M20 12H4" />
-              </svg>
-              Use item
-            </button>
-            <button
-              type="button"
-              onClick={() => { setScanMode('add'); setScannerOpen(true); setScanError('') }}
-              className="flex items-center gap-1 px-3 py-2 rounded-lg bg-green-600 hover:bg-green-700 text-white text-sm font-medium transition-colors"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
-              </svg>
-              Add stock
-            </button>
+          <div className="flex items-center gap-3">
+            {/* Enable/disable toggle */}
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-gray-500">{enabled ? 'Enabled' : 'Disabled'}</span>
+              <button
+                type="button"
+                role="switch"
+                aria-checked={enabled}
+                onClick={toggleEnabled}
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-1 ${
+                  enabled ? 'bg-green-600' : 'bg-gray-300'
+                }`}
+              >
+                <span
+                  className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${
+                    enabled ? 'translate-x-6' : 'translate-x-1'
+                  }`}
+                />
+              </button>
+            </div>
+
+            {/* Scan buttons — only when enabled */}
+            {enabled && (
+              <>
+                <button
+                  type="button"
+                  onClick={() => { setScanMode('use'); setScannerOpen(true); setScanError('') }}
+                  className="flex items-center gap-1 px-3 py-2 rounded-lg bg-orange-500 hover:bg-orange-600 text-white text-sm font-medium transition-colors"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M20 12H4" />
+                  </svg>
+                  Use item
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { setScanMode('add'); setScannerOpen(true); setScanError('') }}
+                  className="flex items-center gap-1 px-3 py-2 rounded-lg bg-green-600 hover:bg-green-700 text-white text-sm font-medium transition-colors"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+                  </svg>
+                  Add stock
+                </button>
+              </>
+            )}
           </div>
         </div>
 
-        {error && (
-          <div role="alert" className="rounded-md bg-red-50 border border-red-200 text-red-700 px-4 py-3 text-sm">{error}</div>
-        )}
-
-        {scanError && (
-          <div role="alert" className="rounded-md bg-orange-50 border border-orange-200 text-orange-700 px-4 py-3 text-sm">{scanError}</div>
-        )}
-
-        {/* Suggestions — out of stock */}
-        {outOfStock.length > 0 && (
-          <div className="bg-white rounded-2xl shadow-md overflow-hidden">
-            <div className="px-5 py-3 bg-amber-50 border-b border-amber-100">
-              <h2 className="text-sm font-semibold text-amber-800">
-                🛒 Suggestions — ran out ({outOfStock.length})
-              </h2>
-              <p className="text-xs text-amber-600 mt-0.5">These items are at 0. Add to your shopping list?</p>
-            </div>
-            <ul className="divide-y divide-gray-50">
-              {outOfStock.map((item) => (
-                <li key={item.id} className="px-5 py-3 flex items-center gap-3">
-                  {item.product.photo_url ? (
-                    <img src={item.product.photo_url} alt={item.product.name} className="w-10 h-10 rounded-lg object-cover flex-shrink-0" />
-                  ) : (
-                    <div className="w-10 h-10 rounded-lg bg-gray-100 flex-shrink-0" />
-                  )}
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-gray-800 truncate">{item.product.name}</p>
-                    {item.product.brand && <p className="text-xs text-gray-500 truncate">{item.product.brand}</p>}
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => handleAddToList(item)}
-                    className="flex-shrink-0 px-3 py-1.5 rounded-lg bg-green-600 hover:bg-green-700 text-white text-xs font-semibold transition-colors"
-                  >
-                    Add to list
-                  </button>
-                </li>
-              ))}
-            </ul>
+        {/* Disabled state */}
+        {!enabled && (
+          <div className="bg-white rounded-2xl shadow-md p-8 text-center text-gray-400 space-y-2">
+            <p className="text-lg font-medium text-gray-500">Pantry tracking is off</p>
+            <p className="text-sm">Enable it above to track your stock and get low-inventory suggestions.</p>
           </div>
         )}
 
-        {/* In stock — grouped by category */}
-        {inStock.length === 0 && outOfStock.length === 0 ? (
-          <div className="bg-white rounded-2xl shadow-md p-8 text-center text-gray-500">
-            <p className="text-lg font-medium">Pantry is empty</p>
-            <p className="text-sm mt-1">Scan items after shopping to track your stock.</p>
-          </div>
-        ) : inStock.length > 0 && (() => {
-          const grouped = {}
-          inStock.forEach((item) => {
-            const cat = item.product.category || 'Uncategorized'
-            if (!grouped[cat]) grouped[cat] = []
-            grouped[cat].push(item)
-          })
-          const sortedCats = Object.keys(grouped).sort((a, b) =>
-            a === 'Uncategorized' ? 1 : b === 'Uncategorized' ? -1 : a.localeCompare(b)
-          )
-          return (
-            <div className="space-y-3">
-              {sortedCats.map((cat) => (
-                <div key={cat} className="bg-white rounded-2xl shadow-md overflow-hidden">
-                  <div className="px-5 py-2 bg-gray-50 border-b border-gray-100">
-                    <h2 className="text-xs font-semibold text-gray-500 uppercase tracking-wide">{cat} ({grouped[cat].length})</h2>
-                  </div>
-                  <ul className="divide-y divide-gray-50">
-                    {grouped[cat].map((item) => (
-                      <PantryRow key={item.id} item={item} onDelta={handleDelta} onSetQty={handleSetQty} />
-                    ))}
-                  </ul>
+        {/* Everything below only shown when enabled */}
+        {enabled && (
+          <>
+            {error && (
+              <div role="alert" className="rounded-md bg-red-50 border border-red-200 text-red-700 px-4 py-3 text-sm">{error}</div>
+            )}
+
+            {scanError && (
+              <div role="alert" className="rounded-md bg-orange-50 border border-orange-200 text-orange-700 px-4 py-3 text-sm">{scanError}</div>
+            )}
+
+            {/* Suggestions — out of stock */}
+            {outOfStock.length > 0 && (
+              <div className="bg-white rounded-2xl shadow-md overflow-hidden">
+                <div className="px-5 py-3 bg-amber-50 border-b border-amber-100">
+                  <h2 className="text-sm font-semibold text-amber-800">
+                    🛒 Suggestions — ran out ({outOfStock.length})
+                  </h2>
+                  <p className="text-xs text-amber-600 mt-0.5">These items are at 0. Add to your shopping list?</p>
                 </div>
-              ))}
-            </div>
-          )
-        })()}
+                <ul className="divide-y divide-gray-50">
+                  {outOfStock.map((item) => (
+                    <li key={item.id ?? item.product_id} className="px-5 py-3 flex items-center gap-3">
+                      {item.product.photo_url ? (
+                        <img src={item.product.photo_url} alt={item.product.name} className="w-10 h-10 rounded-lg object-cover flex-shrink-0" />
+                      ) : (
+                        <div className="w-10 h-10 rounded-lg bg-gray-100 flex-shrink-0" />
+                      )}
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-gray-800 truncate">{item.product.name}</p>
+                        {item.product.brand && <p className="text-xs text-gray-500 truncate">{item.product.brand}</p>}
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => handleAddToList(item)}
+                        className="flex-shrink-0 px-3 py-1.5 rounded-lg bg-green-600 hover:bg-green-700 text-white text-xs font-semibold transition-colors"
+                      >
+                        Add to list
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {/* In stock — grouped by category */}
+            {inStock.length === 0 && outOfStock.length === 0 ? (
+              <div className="bg-white rounded-2xl shadow-md p-8 text-center text-gray-500">
+                <p className="text-lg font-medium">Pantry is empty</p>
+                <p className="text-sm mt-1">Scan items after shopping to track your stock.</p>
+              </div>
+            ) : inStock.length > 0 && (() => {
+              const grouped = {}
+              inStock.forEach((item) => {
+                const cat = item.product.category || 'Uncategorized'
+                if (!grouped[cat]) grouped[cat] = []
+                grouped[cat].push(item)
+              })
+              const sortedCats = Object.keys(grouped).sort((a, b) =>
+                a === 'Uncategorized' ? 1 : b === 'Uncategorized' ? -1 : a.localeCompare(b)
+              )
+              return (
+                <div className="space-y-3">
+                  {sortedCats.map((cat) => (
+                    <div key={cat} className="bg-white rounded-2xl shadow-md overflow-hidden">
+                      <div className="px-5 py-2 bg-gray-50 border-b border-gray-100">
+                        <h2 className="text-xs font-semibold text-gray-500 uppercase tracking-wide">{cat} ({grouped[cat].length})</h2>
+                      </div>
+                      <ul className="divide-y divide-gray-50">
+                        {grouped[cat].map((item) => (
+                          <PantryRow key={item.id ?? item.product_id} item={item} onDelta={handleDelta} onSetQty={handleSetQty} />
+                        ))}
+                      </ul>
+                    </div>
+                  ))}
+                </div>
+              )
+            })()}
+          </>
+        )}
       </div>
 
       {/* Scanner modal */}
