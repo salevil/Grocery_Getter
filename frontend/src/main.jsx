@@ -20,7 +20,7 @@ import ShoppingModePage from './pages/ShoppingModePage.jsx'
 import HouseholdPage from './pages/HouseholdPage.jsx'
 import PantryPage from './pages/PantryPage.jsx'
 import BottomNav from './components/BottomNav.jsx'
-import LanguageSwitcher from './components/LanguageSwitcher.jsx'
+import TopBar from './components/TopBar.jsx'
 
 // Auth guard: redirect to /login if no token in localStorage
 function RequireAuth() {
@@ -30,7 +30,9 @@ function RequireAuth() {
   }
   return (
     <>
-      <div className="pb-16">
+      <TopBar />
+      {/* pt-14 = TopBar height, pb-16 = BottomNav height */}
+      <div className="pt-14 pb-16">
         <Outlet />
       </div>
       <BottomNav />

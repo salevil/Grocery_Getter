@@ -349,7 +349,7 @@ export default function ShoppingModePage() {
       {/* ------------------------------------------------------------------ */}
       {/* Header                                                               */}
       {/* ------------------------------------------------------------------ */}
-      <header className="bg-white border-b border-gray-200 px-4 py-3 flex items-center gap-3 sticky top-0 z-10">
+      <header className="bg-white border-b border-gray-200 px-4 py-3 flex items-center gap-3 sticky top-14 z-10">
         <Link
           to="/lists"
           className="flex items-center gap-1 text-blue-600 hover:text-blue-800 text-sm font-medium transition-colors"
