@@ -352,95 +352,74 @@ export default function ShoppingListPage() {
                 </div>
               </div>
 
-              {/* Section items */}
+              {/* Section items — grouped by category */}
               {!isCollapsed && (
-                <ul id={`section-${key}`} className="divide-y divide-gray-50">
+                <div id={`section-${key}`}>
                   {section.items.length === 0 ? (
-                    <li className="px-5 py-4 text-sm text-gray-400 text-center">
+                    <p className="px-5 py-4 text-sm text-gray-400 text-center">
                       {t('list.noItemsYet')}
-                    </li>
+                    </p>
                   ) : (
-                    section.items.map((item) => (
-                      <li key={item.id} className="px-5 py-3">
-                        <div className="flex items-center gap-3">
-                          {/* Checkbox */}
-                          <input
-                            type="checkbox"
-                            checked={item.checked}
-                            onChange={() => handleToggleChecked(item)}
-                            aria-label={`Mark ${item.product.name} as ${item.checked ? 'unchecked' : 'checked'}`}
-                            className="h-4 w-4 rounded border-gray-300 text-green-600 focus:ring-green-500 cursor-pointer flex-shrink-0"
-                          />
-
-                          {/* Product name */}
-                          <span
-                            className={`flex-1 text-sm font-medium truncate ${
-                              item.checked ? 'line-through text-gray-400' : 'text-gray-800'
-                            }`}
-                          >
-                            {item.product.name}
-                            {item.product.brand && (
-                              <span className="ml-1 font-normal text-gray-400">
-                                {item.product.brand}
-                              </span>
-                            )}
-                            {item.product.category && (
-                              <span className="ml-1 text-xs text-gray-400 font-normal">
-                                · {item.product.category}
-                              </span>
-                            )}
-                          </span>
-
-                          {/* Quantity stepper */}
-                          <div className="flex items-center gap-1 flex-shrink-0">
-                            <button
-                              type="button"
-                              onClick={() => handleQuantityChange(item, -1)}
-                              disabled={item.quantity <= 1}
-                              aria-label={`Decrease quantity of ${item.product.name}`}
-                              className="w-7 h-7 flex items-center justify-center rounded-full bg-gray-100 hover:bg-gray-200 disabled:opacity-40 disabled:cursor-not-allowed text-gray-700 font-bold text-sm transition-colors"
-                            >
-                              −
-                            </button>
-                            <span
-                              className="w-6 text-center text-sm font-semibold text-gray-700"
-                              aria-label={`Quantity: ${item.quantity}`}
-                            >
-                              {item.quantity}
-                            </span>
-                            <button
-                              type="button"
-                              onClick={() => handleQuantityChange(item, 1)}
-                              aria-label={`Increase quantity of ${item.product.name}`}
-                              className="w-7 h-7 flex items-center justify-center rounded-full bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold text-sm transition-colors"
-                            >
-                              +
-                            </button>
+                    (() => {
+                      const grouped = {}
+                      section.items.forEach((item) => {
+                        const cat = item.product?.category || 'Uncategorized'
+                        if (!grouped[cat]) grouped[cat] = []
+                        grouped[cat].push(item)
+                      })
+                      const cats = Object.keys(grouped).sort((a, b) =>
+                        a === 'Uncategorized' ? 1 : b === 'Uncategorized' ? -1 : a.localeCompare(b)
+                      )
+                      return cats.map((cat) => (
+                        <div key={cat}>
+                          <div className="px-5 py-1.5 bg-gray-50 border-y border-gray-100">
+                            <span className="text-xs font-semibold text-gray-400 uppercase tracking-wide">{cat}</span>
                           </div>
-
-                          {/* Remove button */}
-                          <button
-                            type="button"
-                            onClick={() => handleRemoveItem(item)}
-                            aria-label={`Remove ${item.product.name} from list`}
-                            className="flex-shrink-0 w-7 h-7 flex items-center justify-center rounded-full text-gray-400 hover:text-red-600 hover:bg-red-50 transition-colors"
-                          >
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden="true">
-                              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                            </svg>
-                          </button>
+                          <ul className="divide-y divide-gray-50">
+                            {grouped[cat].map((item) => (
+                              <li key={item.id} className="px-5 py-3">
+                                <div className="flex items-center gap-3">
+                                  <input
+                                    type="checkbox"
+                                    checked={item.checked}
+                                    onChange={() => handleToggleChecked(item)}
+                                    aria-label={`Mark ${item.product.name} as ${item.checked ? 'unchecked' : 'checked'}`}
+                                    className="h-4 w-4 rounded border-gray-300 text-green-600 focus:ring-green-500 cursor-pointer flex-shrink-0"
+                                  />
+                                  <span className={`flex-1 text-sm font-medium truncate ${item.checked ? 'line-through text-gray-400' : 'text-gray-800'}`}>
+                                    {item.product.name}
+                                    {item.product.brand && (
+                                      <span className="ml-1 font-normal text-gray-400">{item.product.brand}</span>
+                                    )}
+                                  </span>
+                                  <div className="flex items-center gap-1 flex-shrink-0">
+                                    <button type="button" onClick={() => handleQuantityChange(item, -1)} disabled={item.quantity <= 1}
+                                      aria-label={`Decrease quantity of ${item.product.name}`}
+                                      className="w-7 h-7 flex items-center justify-center rounded-full bg-gray-100 hover:bg-gray-200 disabled:opacity-40 disabled:cursor-not-allowed text-gray-700 font-bold text-sm transition-colors">−</button>
+                                    <span className="w-6 text-center text-sm font-semibold text-gray-700" aria-label={`Quantity: ${item.quantity}`}>{item.quantity}</span>
+                                    <button type="button" onClick={() => handleQuantityChange(item, 1)}
+                                      aria-label={`Increase quantity of ${item.product.name}`}
+                                      className="w-7 h-7 flex items-center justify-center rounded-full bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold text-sm transition-colors">+</button>
+                                  </div>
+                                  <button type="button" onClick={() => handleRemoveItem(item)}
+                                    aria-label={`Remove ${item.product.name} from list`}
+                                    className="flex-shrink-0 w-7 h-7 flex items-center justify-center rounded-full text-gray-400 hover:text-red-600 hover:bg-red-50 transition-colors">
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden="true">
+                                      <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                                    </svg>
+                                  </button>
+                                </div>
+                                {itemErrors[item.id] && (
+                                  <p role="alert" className="mt-1 text-xs text-red-600 pl-7">{itemErrors[item.id]}</p>
+                                )}
+                              </li>
+                            ))}
+                          </ul>
                         </div>
-
-                        {/* Inline item error */}
-                        {itemErrors[item.id] && (
-                          <p role="alert" className="mt-1 text-xs text-red-600 pl-7">
-                            {itemErrors[item.id]}
-                          </p>
-                        )}
-                      </li>
-                    ))
+                      ))
+                    })()
                   )}
-                </ul>
+                </div>
               )}
             </div>
           )

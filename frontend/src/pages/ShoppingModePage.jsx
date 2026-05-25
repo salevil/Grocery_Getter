@@ -440,100 +440,72 @@ export default function ShoppingModePage() {
       <main className="flex-1 overflow-y-auto px-4 py-4 pb-28">
         {items.length === 0 && !loadError ? (
           <div className="flex flex-col items-center justify-center py-16 text-gray-400">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-12 w-12 mb-3 opacity-40"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              strokeWidth={1.5}
-              aria-hidden="true"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
-              />
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 mb-3 opacity-40" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5} aria-hidden="true">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
             </svg>
             <p className="text-base font-medium">Nothing on the list</p>
             <p className="text-sm mt-1">Add items from the shopping list page.</p>
           </div>
         ) : (
-          <ul className="space-y-2">
-            {items.map((item) => (
-              <li key={item.id}>
-                <button
-                  type="button"
-                  onClick={() => handleToggleChecked(item)}
-                  className={`w-full flex items-center gap-4 px-4 py-4 rounded-2xl shadow-sm border transition-colors text-left ${
-                    item.checked
-                      ? 'bg-green-50 border-green-200'
-                      : 'bg-white border-gray-100 hover:border-blue-200 active:bg-gray-50'
-                  }`}
-                  aria-pressed={item.checked}
-                  aria-label={`${item.product?.name ?? 'Item'} — ${item.checked ? 'checked, tap to uncheck' : 'unchecked, tap to check'}`}
-                >
-                  {/* Checkbox indicator */}
-                  <span
-                    className={`flex-shrink-0 w-7 h-7 rounded-full border-2 flex items-center justify-center transition-colors ${
-                      item.checked
-                        ? 'bg-green-500 border-green-500'
-                        : 'border-gray-300 bg-white'
-                    }`}
-                    aria-hidden="true"
-                  >
-                    {item.checked && (
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        className="h-4 w-4 text-white"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                        strokeWidth={3}
-                      >
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                      </svg>
-                    )}
-                  </span>
-
-                  {/* Product info */}
-                  <div className="flex-1 min-w-0">
-                    <p
-                      className={`text-base font-semibold truncate ${
-                        item.checked ? 'line-through text-gray-400' : 'text-gray-800'
-                      }`}
-                    >
-                      {item.product?.name ?? 'Unknown item'}
-                    </p>
-                    {item.product?.brand && (
-                      <p className={`text-sm truncate ${item.checked ? 'text-gray-400' : 'text-gray-500'}`}>
-                        {item.product.brand}
-                      </p>
-                    )}
+          (() => {
+            const grouped = {}
+            items.forEach((item) => {
+              const cat = item.product?.category || 'Uncategorized'
+              if (!grouped[cat]) grouped[cat] = []
+              grouped[cat].push(item)
+            })
+            const cats = Object.keys(grouped).sort((a, b) =>
+              a === 'Uncategorized' ? 1 : b === 'Uncategorized' ? -1 : a.localeCompare(b)
+            )
+            return (
+              <div className="space-y-2">
+                {cats.map((cat) => (
+                  <div key={cat} className="bg-white rounded-2xl shadow-sm overflow-hidden">
+                    <div className="px-4 py-2 bg-gray-50 border-b border-gray-100">
+                      <span className="text-xs font-semibold text-gray-400 uppercase tracking-wide">{cat}</span>
+                    </div>
+                    <ul className="space-y-0">
+                      {grouped[cat].map((item) => (
+                        <li key={item.id} className="border-b border-gray-50 last:border-0">
+                          <button
+                            type="button"
+                            onClick={() => handleToggleChecked(item)}
+                            className={`w-full flex items-center gap-4 px-4 py-4 transition-colors text-left ${
+                              item.checked ? 'bg-green-50' : 'bg-white hover:bg-gray-50 active:bg-gray-100'
+                            }`}
+                            aria-pressed={item.checked}
+                            aria-label={`${item.product?.name ?? 'Item'} — ${item.checked ? 'checked, tap to uncheck' : 'unchecked, tap to check'}`}
+                          >
+                            <span className={`flex-shrink-0 w-7 h-7 rounded-full border-2 flex items-center justify-center transition-colors ${item.checked ? 'bg-green-500 border-green-500' : 'border-gray-300 bg-white'}`} aria-hidden="true">
+                              {item.checked && (
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                                </svg>
+                              )}
+                            </span>
+                            <div className="flex-1 min-w-0">
+                              <p className={`text-base font-semibold truncate ${item.checked ? 'line-through text-gray-400' : 'text-gray-800'}`}>
+                                {item.product?.name ?? 'Unknown item'}
+                              </p>
+                              {item.product?.brand && (
+                                <p className={`text-sm truncate ${item.checked ? 'text-gray-400' : 'text-gray-500'}`}>{item.product.brand}</p>
+                              )}
+                            </div>
+                            <span className={`flex-shrink-0 text-sm font-bold px-2.5 py-1 rounded-full ${item.checked ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-600'}`} aria-label={`Quantity: ${item.quantity}`}>
+                              ×{item.quantity}
+                            </span>
+                          </button>
+                          {itemErrors[item.id] && (
+                            <p role="alert" className="px-4 pb-2 text-xs text-red-600">{itemErrors[item.id]}</p>
+                          )}
+                        </li>
+                      ))}
+                    </ul>
                   </div>
-
-                  {/* Quantity badge */}
-                  <span
-                    className={`flex-shrink-0 text-sm font-bold px-2.5 py-1 rounded-full ${
-                      item.checked
-                        ? 'bg-green-100 text-green-600'
-                        : 'bg-gray-100 text-gray-600'
-                    }`}
-                    aria-label={`Quantity: ${item.quantity}`}
-                  >
-                    ×{item.quantity}
-                  </span>
-                </button>
-
-                {/* Per-item error */}
-                {itemErrors[item.id] && (
-                  <p role="alert" className="mt-1 text-xs text-red-600 px-4">
-                    {itemErrors[item.id]}
-                  </p>
-                )}
-              </li>
-            ))}
-          </ul>
+                ))}
+              </div>
+            )
+          })()
         )}
       </main>
 
