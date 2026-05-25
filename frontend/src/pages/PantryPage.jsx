@@ -156,9 +156,9 @@ export default function PantryPage() {
       <div className="max-w-2xl mx-auto space-y-6">
 
         {/* Header */}
-        <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold text-gray-800">Pantry</h1>
-          <div className="flex items-center gap-3">
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <h1 className="text-2xl font-bold text-gray-800">Pantry</h1>
             {/* Enable/disable toggle */}
             <div className="flex items-center gap-2">
               <span className="text-sm text-gray-500">{enabled ? 'Enabled' : 'Disabled'}</span>
@@ -178,33 +178,33 @@ export default function PantryPage() {
                 />
               </button>
             </div>
-
-            {/* Scan buttons — only when enabled */}
-            {enabled && (
-              <>
-                <button
-                  type="button"
-                  onClick={() => { setScanMode('use'); setScannerOpen(true); setScanError('') }}
-                  className="flex items-center gap-1 px-3 py-2 rounded-lg bg-orange-500 hover:bg-orange-600 text-white text-sm font-medium transition-colors"
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M20 12H4" />
-                  </svg>
-                  Use item
-                </button>
-                <button
-                  type="button"
-                  onClick={() => { setScanMode('add'); setScannerOpen(true); setScanError('') }}
-                  className="flex items-center gap-1 px-3 py-2 rounded-lg bg-green-600 hover:bg-green-700 text-white text-sm font-medium transition-colors"
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
-                  </svg>
-                  Add stock
-                </button>
-              </>
-            )}
           </div>
+
+          {/* Scan buttons — only when enabled */}
+          {enabled && (
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => { setScanMode('use'); setScannerOpen(true); setScanError('') }}
+                className="flex items-center gap-1 px-3 py-2 rounded-lg bg-orange-500 hover:bg-orange-600 text-white text-sm font-medium transition-colors"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M20 12H4" />
+                </svg>
+                Use item
+              </button>
+              <button
+                type="button"
+                onClick={() => { setScanMode('add'); setScannerOpen(true); setScanError('') }}
+                className="flex items-center gap-1 px-3 py-2 rounded-lg bg-green-600 hover:bg-green-700 text-white text-sm font-medium transition-colors"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+                </svg>
+                Add stock
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Disabled state */}
