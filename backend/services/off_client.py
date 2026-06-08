@@ -57,4 +57,5 @@ async def lookup_upc(upc: str) -> dict | None:
         "name": product.get("product_name") or None,
         "brand": product.get("brands") or None,
         "quantity": product.get("quantity") or None,
+        "off_categories": product.get("categories_tags") or [],  # e.g. ["en:canned-tomatoes"]
     }

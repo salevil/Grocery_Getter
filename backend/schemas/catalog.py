@@ -106,8 +106,11 @@ class UpcLookupResponse(BaseModel):
     ``product`` is populated when ``found`` is True.
     ``prefill`` contains name/brand/quantity sourced from Open Food Facts when
     the barcode was recognised externally but is not yet in the catalog.
+    ``category_candidates`` contains up to 3 list items whose product names
+    fuzzy-match the scanned item, returned when there is no exact UPC match.
     """
 
     found: bool
     product: ProductResponse | None = None
     prefill: dict | None = None
+    category_candidates: list[dict] | None = None  # [{list_item_id, product_id, product_name, score}]

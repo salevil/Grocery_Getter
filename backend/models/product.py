@@ -44,3 +44,6 @@ class Product(Base):
     list_items: Mapped[list["ListItem"]] = relationship(
         "ListItem", back_populates="product", cascade="all, delete-orphan"
     )
+    upcs: Mapped[list["ProductUpc"]] = relationship(
+        "ProductUpc", back_populates="product", cascade="all, delete-orphan"
+    )

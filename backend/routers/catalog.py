@@ -1,12 +1,16 @@
 """Catalog router — store and product endpoints."""
 
 from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile, status
+from pydantic import BaseModel
 from sqlalchemy import select, update
+from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
 from backend.db import get_db
 from backend.models.list_item import ListItem
 from backend.models.product import Product
+from backend.models.product_upc import ProductUpc
 from backend.models.store import Store
 from backend.models.user import User
 from backend.schemas.catalog import (
@@ -163,42 +167,159 @@ async def lookup_upc(
 ) -> UpcLookupResponse:
     """Look up a UPC barcode.
 
-    1. Check if the UPC already exists in the household catalog.
-       - If yes: return ``found=True`` with the existing product.
-    2. Query Open Food Facts for the UPC.
-       - If found: return ``found=False`` with prefill data.
-    3. If neither source has the product: return ``found=False, prefill=None``.
+    1. Check product_upcs table for a known UPC link scoped to this household.
+    2. Check legacy Product.upc column.
+    3. Query Open Food Facts for prefill data + off_categories.
+    4. Score unchecked list items by fuzzy word overlap with the scanned name.
+       Return up to 3 candidates with score > 0 as category_candidates.
+    5. If OFF returns nothing: found=False, prefill=None, category_candidates=None.
     """
-    # Check household catalog first
-    result = await db.execute(
+    # --- Step 1: check product_upcs table ---
+    upc_result = await db.execute(
+        select(ProductUpc)
+        .join(Product, ProductUpc.product_id == Product.id)
+        .where(
+            ProductUpc.upc == upc,
+            Product.household_id == current_user.household_id,
+        )
+        .options(selectinload(ProductUpc.product))
+    )
+    upc_row = upc_result.scalar_one_or_none()
+    if upc_row is not None:
+        return UpcLookupResponse(
+            found=True,
+            product=ProductResponse.model_validate(upc_row.product),
+            prefill=None,
+            category_candidates=None,
+        )
+
+    # --- Step 2: check legacy Product.upc column ---
+    legacy_result = await db.execute(
         select(Product).where(
             Product.household_id == current_user.household_id,
             Product.upc == upc,
         )
     )
-    existing: Product | None = result.scalar_one_or_none()
+    existing: Product | None = legacy_result.scalar_one_or_none()
     if existing is not None:
         return UpcLookupResponse(
             found=True,
             product=ProductResponse.model_validate(existing),
             prefill=None,
+            category_candidates=None,
         )
 
-    # Query Open Food Facts
+    # --- Step 3: query Open Food Facts ---
     off_data = await off_client.lookup_upc(upc)
-    if off_data is not None:
-        return UpcLookupResponse(
-            found=False,
-            product=None,
-            prefill={
-                "name": off_data.get("name"),
-                "brand": off_data.get("brand"),
-                "quantity": off_data.get("quantity"),
-            },
-        )
+    if off_data is None:
+        return UpcLookupResponse(found=False, product=None, prefill=None, category_candidates=None)
 
-    # Not found anywhere
-    return UpcLookupResponse(found=False, product=None, prefill=None)
+    prefill = {
+        "name": off_data.get("name"),
+        "brand": off_data.get("brand"),
+        "quantity": off_data.get("quantity"),
+    }
+
+    # --- Step 4: fuzzy-match against unchecked list items ---
+    off_name: str = off_data.get("name") or ""
+    off_categories: list[str] = off_data.get("off_categories") or []
+
+    # Words from the OFF product name that are meaningful (≥4 chars)
+    off_name_words = {w.lower() for w in off_name.split() if len(w) >= 4}
+
+    # Normalised OFF category tags (strip "en:" prefix, lowercase)
+    off_cat_tags = {t.lower().removeprefix("en:") for t in off_categories}
+
+    # Load all unchecked list items for this household, with their products
+    items_result = await db.execute(
+        select(ListItem)
+        .join(Product, ListItem.product_id == Product.id)
+        .where(
+            ListItem.household_id == current_user.household_id,
+            ListItem.checked.is_(False),
+        )
+        .options(selectinload(ListItem.product))
+    )
+    list_items = items_result.scalars().all()
+
+    scored: list[dict] = []
+    for li in list_items:
+        if li.product is None:
+            continue
+        score = 0
+        item_name_lower = li.product.name.lower()
+
+        # +2 for each meaningful word from the OFF name that appears in the item name
+        for word in off_name_words:
+            if word in item_name_lower:
+                score += 2
+
+        # +1 if the product's category (lowercased) overlaps with any OFF tag
+        if li.product.category:
+            item_cat_lower = li.product.category.lower()
+            for tag in off_cat_tags:
+                # Compare stripped tag words against our category string
+                tag_words = {w for w in tag.replace("-", " ").split() if len(w) >= 4}
+                if any(tw in item_cat_lower for tw in tag_words):
+                    score += 1
+                    break
+
+        if score > 0:
+            scored.append({
+                "list_item_id": li.id,
+                "product_id": li.product.id,
+                "product_name": li.product.name,
+                "score": score,
+            })
+
+    # Sort by score descending, take top 3
+    scored.sort(key=lambda x: x["score"], reverse=True)
+    category_candidates = scored[:3] if scored else None
+
+    return UpcLookupResponse(
+        found=False,
+        product=None,
+        prefill=prefill,
+        category_candidates=category_candidates,
+    )
+
+
+# ---------------------------------------------------------------------------
+# Save UPC link for a product
+# ---------------------------------------------------------------------------
+
+
+class UpcLinkBody(BaseModel):
+    upc: str
+    source: str = "manual"
+
+
+@router.post("/products/{product_id}/upcs")
+async def add_product_upc(
+    product_id: int,
+    body: UpcLinkBody,
+    current_user: User = Depends(get_current_household_user),
+    db: AsyncSession = Depends(get_db),
+) -> dict:
+    """Link a UPC to a product (e.g. after a category-match confirmation).
+
+    Uses ON CONFLICT DO NOTHING so duplicate scans are safe.
+    """
+    # Verify product belongs to this household
+    prod_result = await db.execute(select(Product).where(Product.id == product_id))
+    product: Product | None = prod_result.scalar_one_or_none()
+    if product is None or product.household_id != current_user.household_id:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Product not found")
+
+    stmt = (
+        pg_insert(ProductUpc)
+        .values(product_id=product_id, upc=body.upc, source=body.source)
+        .on_conflict_do_nothing(constraint="uq_product_upcs_product_id_upc")
+    )
+    await db.execute(stmt)
+    await db.commit()
+
+    return {"ok": True}
 
 
 # ---------------------------------------------------------------------------

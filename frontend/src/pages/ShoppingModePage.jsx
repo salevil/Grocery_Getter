@@ -53,6 +53,9 @@ export default function ShoppingModePage() {
   const [pendingQtyItem, setPendingQtyItem] = useState(null) // { item, newQty }
   const [qtyInput, setQtyInput] = useState('')
 
+  // Category match confirmation state (when no exact UPC match but fuzzy candidates found)
+  const [pendingCategoryMatch, setPendingCategoryMatch] = useState(null) // { upc, candidates, scannedName }
+
   // Track whether we've already drained on this online event
   const drainingRef = useRef(false)
 
@@ -220,24 +223,60 @@ export default function ShoppingModePage() {
   // -------------------------------------------------------------------------
   // Barcode scan handler
   // -------------------------------------------------------------------------
-  function handleScan(upc) {
+  async function handleScan(upc) {
     setScannerOpen(false)
     setScanMessage('')
 
-    const matched = items.find(
-      (i) => i.product?.upc && String(i.product.upc) === String(upc)
-    )
+    try {
+      const { data } = await apiClient.get(`/api/catalog/lookup/${upc}`)
 
-    if (!matched) {
+      if (data.found && data.product) {
+        // Exact match — find the list item for this product
+        const matched = items.find((i) => i.product?.id === data.product.id)
+        if (matched) {
+          setPendingQtyItem({ item: matched, newQty: matched.quantity })
+          setQtyInput(String(matched.quantity))
+          return
+        }
+      }
+
+      if (data.category_candidates && data.category_candidates.length > 0) {
+        // Fuzzy category candidates — show confirmation dialog
+        const candidates = data.category_candidates
+          .map((c) => items.find((i) => i.product?.id === c.product_id))
+          .filter(Boolean)
+        if (candidates.length > 0) {
+          setPendingCategoryMatch({
+            upc,
+            candidates,
+            scannedName: data.prefill?.name ?? upc,
+          })
+          return
+        }
+      }
+
       setScanMessage(`"${upc}" is not on your list.`)
-      // Clear message after 3 seconds
+      setTimeout(() => setScanMessage(''), 4000)
+    } catch {
+      setScanMessage('Scan lookup failed. Please try again.')
       setTimeout(() => setScanMessage(''), 3000)
-      return
     }
+  }
 
-    // Open quantity confirmation
-    setPendingQtyItem({ item: matched, newQty: matched.quantity })
-    setQtyInput(String(matched.quantity))
+  async function confirmCategoryMatch(item) {
+    const { upc } = pendingCategoryMatch
+    setPendingCategoryMatch(null)
+    // Save the UPC link permanently (fire-and-forget)
+    apiClient
+      .post(`/api/catalog/products/${item.product.id}/upcs`, { upc, source: 'scanned' })
+      .catch(() => {})
+    // Proceed to quantity confirmation
+    setPendingQtyItem({ item, newQty: item.quantity })
+    setQtyInput(String(item.quantity))
+  }
+
+  function cancelCategoryMatch() {
+    setPendingCategoryMatch(null)
   }
 
   async function confirmQtyAndCheck() {
@@ -624,6 +663,50 @@ export default function ShoppingModePage() {
                 Check off
               </button>
             </div>
+          </div>
+        </div>
+      )}
+      {/* ------------------------------------------------------------------ */}
+      {/* Category match confirmation modal (after fuzzy scan match)          */}
+      {/* ------------------------------------------------------------------ */}
+      {pendingCategoryMatch && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Confirm which item was scanned"
+        >
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm p-6 space-y-4">
+            <h2 className="text-base font-semibold text-gray-800">
+              Which item is this?
+            </h2>
+            <p className="text-sm text-gray-600">
+              We found <span className="font-medium">"{pendingCategoryMatch.scannedName}"</span> — which item on your list is this?
+            </p>
+            <div className="space-y-2">
+              {pendingCategoryMatch.candidates.map((item) => (
+                <button
+                  key={item.id}
+                  type="button"
+                  onClick={() => confirmCategoryMatch(item)}
+                  className="w-full text-left px-4 py-3 rounded-xl border border-gray-200 hover:bg-blue-50 hover:border-blue-300 transition-colors"
+                >
+                  <p className="text-sm font-semibold text-gray-800">
+                    {item.product?.name ?? 'Unknown item'}
+                  </p>
+                  {item.product?.brand && (
+                    <p className="text-xs text-gray-500 mt-0.5">{item.product.brand}</p>
+                  )}
+                </button>
+              ))}
+            </div>
+            <button
+              type="button"
+              onClick={cancelCategoryMatch}
+              className="w-full py-2.5 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold text-sm transition-colors"
+            >
+              Cancel
+            </button>
           </div>
         </div>
       )}

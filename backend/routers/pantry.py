@@ -9,6 +9,7 @@ from sqlalchemy.orm import selectinload
 from backend.db import get_db
 from backend.models.pantry_item import PantryItem
 from backend.models.product import Product
+from backend.models.product_upc import ProductUpc
 from backend.models.user import User
 from backend.schemas.catalog import ProductResponse
 from backend.services.auth_service import get_current_household_user
@@ -194,21 +195,36 @@ async def lookup_pantry_by_upc(
     if the product is in the catalog but not yet in the pantry.
     Returns None if the product is not in the catalog at all.
     """
-    prod_result = await db.execute(
-        select(Product).where(
+    # --- Check product_upcs table first (multi-UPC support) ---
+    upc_result = await db.execute(
+        select(ProductUpc)
+        .join(Product, ProductUpc.product_id == Product.id)
+        .where(
+            ProductUpc.upc == upc,
             Product.household_id == current_user.household_id,
-            Product.upc == upc,
         )
     )
-    product = prod_result.scalar_one_or_none()
-    if product is None:
-        return None
+    upc_row = upc_result.scalar_one_or_none()
+    if upc_row is not None:
+        product_id_to_use = upc_row.product_id
+    else:
+        # --- Fall back to legacy Product.upc column ---
+        prod_result = await db.execute(
+            select(Product).where(
+                Product.household_id == current_user.household_id,
+                Product.upc == upc,
+            )
+        )
+        product = prod_result.scalar_one_or_none()
+        if product is None:
+            return None
+        product_id_to_use = product.id
 
     result = await db.execute(
         select(PantryItem)
         .where(
             PantryItem.household_id == current_user.household_id,
-            PantryItem.product_id == product.id,
+            PantryItem.product_id == product_id_to_use,
         )
         .options(selectinload(PantryItem.product))
     )
@@ -218,10 +234,15 @@ async def lookup_pantry_by_upc(
         return PantryItemResponse.model_validate(item).model_dump()
     
     # Product exists in catalog but no pantry entry yet — return synthetic entry
+    # Re-fetch product for the response shape
+    prod_result2 = await db.execute(select(Product).where(Product.id == product_id_to_use))
+    product_obj = prod_result2.scalar_one_or_none()
+    if product_obj is None:
+        return None
     from backend.schemas.catalog import ProductResponse
     return {
         "id": None,
-        "product_id": product.id,
+        "product_id": product_id_to_use,
         "quantity": 0,
-        "product": ProductResponse.model_validate(product).model_dump(),
+        "product": ProductResponse.model_validate(product_obj).model_dump(),
     }
