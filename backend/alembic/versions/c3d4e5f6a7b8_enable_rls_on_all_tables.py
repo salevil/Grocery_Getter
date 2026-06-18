@@ -34,6 +34,8 @@ def upgrade() -> None:
         op.execute(f"ALTER TABLE public.{table} ENABLE ROW LEVEL SECURITY;")
         # Force RLS even for table owners (extra safety)
         op.execute(f"ALTER TABLE public.{table} FORCE ROW LEVEL SECURITY;")
+    # Also lock down Alembic's own tracking table
+    op.execute("ALTER TABLE public.alembic_version ENABLE ROW LEVEL SECURITY;")
 
 
 def downgrade() -> None:
