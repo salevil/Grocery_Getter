@@ -1,10 +1,13 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import apiClient from '../services/apiClient'
 import useAuthStore from '../store/authStore'
 
 export default function HouseholdPage() {
   const householdId = useAuthStore((s) => s.householdId)
+  const logout = useAuthStore((s) => s.logout)
+  const navigate = useNavigate()
   const { t } = useTranslation()
 
   const [email, setEmail] = useState('')
@@ -71,7 +74,21 @@ export default function HouseholdPage() {
         {/* Header */}
         <h1 className="text-2xl font-bold text-gray-800">{t('nav.household')}</h1>
 
-        {/* Invite card */}
+        {/* Sign out */}
+        <div className="bg-white rounded-2xl shadow-md p-6">
+          <h2 className="text-base font-semibold text-gray-800 mb-1">Account</h2>
+          <p className="text-sm text-gray-500 mb-4">Sign out of your account on this device.</p>
+          <button
+            type="button"
+            onClick={() => { logout(); navigate('/login') }}
+            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-red-50 hover:bg-red-100 text-red-700 text-sm font-semibold transition-colors"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+            </svg>
+            Sign out
+          </button>
+        </div>
         <div className="bg-white rounded-2xl shadow-md p-6 space-y-4">
           <div>
             <h2 className="text-base font-semibold text-gray-800">{t('household.inviteTitle')}</h2>
